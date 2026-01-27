@@ -46,11 +46,6 @@ struct FoodListView: View {
                 ErrorSection(error: vm.errorMessage)
             }
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Sign Out") { Task { _ = await Amplify.Auth.signOut() } }
-                }
-            }
             .refreshable { await vm.fetchAll(day: dayString, date: selectedDate) }
             .alert("Add Food", isPresented: $showingAddFood) {
                 TextField("Name", text: $newFoodName)

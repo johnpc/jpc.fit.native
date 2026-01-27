@@ -26,7 +26,7 @@ actor APIService {
     
     func fetchQuickAdds() async -> [QuickAddItem] {
         let req = GraphQLRequest<JSONValue>(
-            document: "query{listQuickAdds{items{id name calories icon}}}", variables: [:], responseType: JSONValue.self)
+            document: "query{listQuickAdds{items{id name calories protein icon}}}", variables: [:], responseType: JSONValue.self)
         guard case .success(let data) = try? await Amplify.API.query(request: req),
               let items = data.value(at: "listQuickAdds.items"),
               case .array(let arr) = items else { return [] }
@@ -92,6 +92,7 @@ actor APIService {
               case .string(let name) = item.value(at: "name"),
               case .number(let cal) = item.value(at: "calories") else { return nil }
         let icon: String = if case .string(let i) = item.value(at: "icon") { i } else { "🍽️" }
-        return QuickAddItem(id: id, name: name, calories: Int(cal), icon: icon)
+        let protein: Int? = if case .number(let p) = item.value(at: "protein") { Int(p) } else { nil }
+        return QuickAddItem(id: id, name: name, calories: Int(cal), icon: icon, protein: protein)
     }
 }

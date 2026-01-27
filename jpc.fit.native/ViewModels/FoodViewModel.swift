@@ -1,4 +1,5 @@
 import Foundation
+import WidgetKit
 
 @MainActor
 class FoodViewModel: ObservableObject {
@@ -33,16 +34,25 @@ class FoodViewModel: ObservableObject {
         healthKitCache = c
         userQuickAdds = q
         isLoading = false
+        
+        updateWidget(day: day)
     }
     
     func addFood(name: String, calories: Int, day: String) async {
         await api.createFood(name: name, calories: calories, day: day)
         foods = await api.fetchFoods(day: day)
+        updateWidget(day: day)
     }
     
     func deleteFood(_ food: Food, day: String) async {
         await api.deleteFood(id: food.id)
         foods = await api.fetchFoods(day: day)
+        updateWidget(day: day)
+    }
+    
+    private func updateWidget(day: String) {
+        SharedDataManager.shared.save(burned: burnedCalories, consumed: totalCalories, day: day)
+        WidgetCenter.shared.reloadAllTimelines()
     }
     
     private func syncHealthKit(day: String, date: Date) async {

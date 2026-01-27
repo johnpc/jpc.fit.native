@@ -4,7 +4,7 @@ import Authenticator
 struct ContentView: View {
     var body: some View {
         Authenticator { state in
-            FoodListView(user: state.user)
+            MainTabView(user: state.user)
         }
     }
 }

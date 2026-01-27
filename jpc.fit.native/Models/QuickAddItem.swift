@@ -5,4 +5,5 @@ struct QuickAddItem: Identifiable {
     let name: String
     let calories: Int
     let icon: String
+    let protein: Int?
 }
