@@ -33,10 +33,12 @@ actor APIService {
         return arr.compactMap { parseQuickAdd($0) }
     }
     
-    func createFood(name: String, calories: Int, day: String) async {
+    func createFood(name: String, calories: Int, protein: Int? = nil, day: String) async {
+        var input: [String: Any] = ["name": name, "calories": calories, "day": day]
+        if let p = protein { input["protein"] = p }
         let req = GraphQLRequest<JSONValue>(
             document: "mutation($input:CreateFoodInput!){createFood(input:$input){id}}",
-            variables: ["input": ["name": name, "calories": calories, "day": day]],
+            variables: ["input": input],
             responseType: JSONValue.self)
         _ = try? await Amplify.API.mutate(request: req)
     }

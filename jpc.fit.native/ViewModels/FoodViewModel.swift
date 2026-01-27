@@ -40,8 +40,8 @@ class FoodViewModel: ObservableObject {
         updateWidget(day: day)
     }
     
-    func addFood(name: String, calories: Int, day: String) async {
-        await api.createFood(name: name, calories: calories, day: day)
+    func addFood(name: String, calories: Int, protein: Int? = nil, day: String) async {
+        await api.createFood(name: name, calories: calories, protein: protein, day: day)
         foods = await api.fetchFoods(day: day)
         updateWidget(day: day)
     }

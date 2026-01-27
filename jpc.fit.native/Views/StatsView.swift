@@ -6,23 +6,11 @@ struct StatsView: View {
     @State private var weekStartDate = Date()
     @State private var weekData: [DayStats] = []
     @State private var isLoading = true
+    @State private var streakDays: Int?
+    @State private var streakNet = 0
     
     private var weekNet: Int { weekData.filter { $0.tracked }.reduce(0) { $0 + $1.net } }
     private var trackedCount: Int { weekData.filter { $0.tracked }.count }
-    private var streakDays: Int {
-        var count = 0
-        for day in weekData.reversed() {
-            if day.tracked { count += 1 } else { break }
-        }
-        return count
-    }
-    private var streakNet: Int {
-        var total = 0
-        for day in weekData.reversed() {
-            if day.tracked { total += day.net } else { break }
-        }
-        return total
-    }
     private var streakLbs: Double { Double(streakNet) / 3500.0 }
     
     var body: some View {
@@ -32,13 +20,18 @@ struct StatsView: View {
             // Streak section
             Section {
                 VStack(spacing: 8) {
-                    HStack {
-                        Text("Your streak is \(streakDays) days (~")
-                        Text("\(abs(streakLbs), specifier: "%.1f") lbs")
+                    if let days = streakDays {
+                        Text("Your streak is \(days) days")
+                            .font(.headline)
+                        Text("Est. \(streakLbs, specifier: "%.1f") lbs \(streakLbs > 0 ? "gained" : "lost")")
+                            .font(.subheadline)
                             .foregroundStyle(streakLbs > 0 ? .red : .green)
-                        Text(")")
+                    } else {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                            Text("Calculating streak...")
+                        }
                     }
-                    .font(.headline)
                     
                     HStack(spacing: 16) {
                         ForEach(weekData.suffix(4), id: \.day) { day in
@@ -54,10 +47,10 @@ struct StatsView: View {
             }
             
             // Week summary
-            Section {
+            Section("This Week") {
                 HStack {
                     Spacer()
-                    Text("Net \(weekNet) cal for \(trackedCount) tracked day\(trackedCount == 1 ? "" : "s")")
+                    Text("Net \(weekNet) cal")
                         .foregroundStyle(weekNet > 0 ? .red : .green)
                         .fontWeight(.semibold)
                     Spacer()
@@ -113,8 +106,8 @@ struct StatsView: View {
             }
         }
         .navigationTitle("Stats")
-        .task { await fetchWeek() }
-        .refreshable { await fetchWeek() }
+        .task { await fetchWeek(); await fetchStreak() }
+        .refreshable { await fetchWeek(); await fetchStreak() }
         .overlay { if isLoading { ProgressView() } }
     }
     
@@ -219,6 +212,42 @@ struct StatsView: View {
         let active = first["activeCalories"]?.doubleValue ?? 0
         let basal = first["baseCalories"]?.doubleValue ?? 0
         return Int(active + basal)
+    }
+    
+    private func fetchStreak() async {
+        var days = 0
+        var net = 0
+        var offset = 0
+        let batchSize = 14
+        
+        while true {
+            // Fetch batch of days in parallel
+            let dates = (0..<batchSize).map { Calendar.current.date(byAdding: .day, value: -(offset + $0), to: Date())! }
+            let results = await withTaskGroup(of: (Int, [Int], Int).self) { group in
+                for (i, date) in dates.enumerated() {
+                    group.addTask {
+                        let dayString = date.formatted(date: .numeric, time: .omitted)
+                        async let foods = self.fetchFoods(day: dayString)
+                        async let burned = self.fetchCache(day: dayString)
+                        return (i, await foods, await burned)
+                    }
+                }
+                var arr = [(Int, [Int], Int)]()
+                for await r in group { arr.append(r) }
+                return arr.sorted { $0.0 < $1.0 }
+            }
+            
+            for (_, foods, burned) in results {
+                if foods.isEmpty {
+                    streakDays = days
+                    streakNet = net
+                    return
+                }
+                days += 1
+                net += foods.reduce(0, +) - burned
+            }
+            offset += batchSize
+        }
     }
 }
 

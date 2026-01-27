@@ -8,9 +8,12 @@ struct FoodListView: View {
     @State private var showingAddFood = false
     @State private var newFoodName = ""
     @State private var newFoodCalories = ""
+    @State private var newFoodProtein = ""
+    @State private var preferences: Preferences?
     
     var dayString: String { selectedDate.formatted(date: .numeric, time: .omitted) }
     var isToday: Bool { Calendar.current.isDateInToday(selectedDate) }
+    private var hideProtein: Bool { preferences?.hideProtein ?? false }
     
     var body: some View {
         NavigationStack {
@@ -40,34 +43,55 @@ struct FoodListView: View {
                     }
                 }
                 RemainingSection(remaining: vm.remainingCalories)
-                HealthKitSection(cache: vm.healthKitCache, consumed: vm.totalCalories)
+                HealthKitSection(cache: vm.healthKitCache, consumed: vm.totalCalories, hideSteps: preferences?.hideSteps ?? false)
                 FoodSection(foods: vm.foods, isLoading: vm.isLoading, dayString: dayString, onDelete: deleteFood)
                 QuickAddSection(quickAdds: vm.quickAdds, onQuickAdd: addQuickFood, onCustomAdd: { showingAddFood = true })
                 ErrorSection(error: vm.errorMessage)
             }
             .navigationBarTitleDisplayMode(.inline)
             .refreshable { await vm.fetchAll(day: dayString, date: selectedDate) }
-            .alert("Add Food", isPresented: $showingAddFood) {
-                TextField("Name", text: $newFoodName)
-                TextField("Calories", text: $newFoodCalories).keyboardType(.numberPad)
-                Button("Cancel", role: .cancel) { clearForm() }
-                Button("Add") { addCustomFood() }
+            .sheet(isPresented: $showingAddFood) {
+                NavigationStack {
+                    Form {
+                        TextField("Name", text: $newFoodName)
+                        TextField("Calories", text: $newFoodCalories)
+                            .keyboardType(.numberPad)
+                        if !hideProtein {
+                            TextField("Protein (g)", text: $newFoodProtein)
+                                .keyboardType(.numberPad)
+                        }
+                    }
+                    .navigationTitle("Add Food")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Cancel") { showingAddFood = false; clearForm() }
+                        }
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Add") { addCustomFood(); showingAddFood = false }
+                                .disabled(newFoodCalories.isEmpty)
+                        }
+                    }
+                }
+                .presentationDetents([.medium])
             }
             .onChange(of: selectedDate) { _, _ in Task { await vm.fetchAll(day: dayString, date: selectedDate) } }
         }
         .task {
             await vm.requestHealthKitPermission()
-            await vm.fetchAll(day: dayString, date: selectedDate)
+            async let _ = vm.fetchAll(day: dayString, date: selectedDate)
+            preferences = await fetchPreferences()
         }
     }
     
     private func addQuickFood(_ qa: QuickAddItem) {
-        Task { await vm.addFood(name: qa.name, calories: qa.calories, day: dayString) }
+        Task { await vm.addFood(name: qa.name, calories: qa.calories, protein: qa.protein, day: dayString) }
     }
     
     private func addCustomFood() {
         if let cal = Int(newFoodCalories), cal > 0 {
-            Task { await vm.addFood(name: newFoodName.isEmpty ? "Food" : newFoodName, calories: cal, day: dayString) }
+            let protein = Int(newFoodProtein)
+            Task { await vm.addFood(name: newFoodName.isEmpty ? "Food" : newFoodName, calories: cal, protein: protein, day: dayString) }
         }
         clearForm()
     }
@@ -79,5 +103,19 @@ struct FoodListView: View {
     private func clearForm() {
         newFoodName = ""
         newFoodCalories = ""
+        newFoodProtein = ""
+    }
+    
+    private func fetchPreferences() async -> Preferences? {
+        let req = GraphQLRequest<JSONValue>(
+            document: "query{listPreferences{items{id hideProtein hideSteps}}}",
+            responseType: JSONValue.self)
+        guard case .success(let data) = try? await Amplify.API.query(request: req),
+              let item = data["listPreferences"]?["items"]?.asArray?.first else { return nil }
+        var hp: Bool? = nil
+        var hs: Bool? = nil
+        if case .boolean(let b) = item["hideProtein"] { hp = b }
+        if case .boolean(let b) = item["hideSteps"] { hs = b }
+        return Preferences(id: item["id"]?.stringValue ?? "", hideProtein: hp, hideSteps: hs)
     }
 }
