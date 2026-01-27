@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scheme LastUpgradeVersion="2610" version="1.7">
+   <BuildAction parallelizeBuildables="YES" buildImplicitDependencies="YES">
+      <BuildActionEntries>
+         <BuildActionEntry buildForTesting="YES" buildForRunning="YES">
+            <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="A6F519B42F292AF4003875EA" BuildableName="jpc.fit.app" BlueprintName="jpc.fit.native" ReferencedContainer="container:jpc.fit.native.xcodeproj"/>
+         </BuildActionEntry>
+      </BuildActionEntries>
+   </BuildAction>
+   <TestAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv="YES">
+      <Testables>
+         <TestableReference skipped="NO">
+            <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="42644E9E73094AB8A004D660" BuildableName="jpc.fit.nativeUITests.xctest" BlueprintName="jpc.fit.nativeUITests" ReferencedContainer="container:jpc.fit.native.xcodeproj"/>
+         </TestableReference>
+      </Testables>
+   </TestAction>
+   <LaunchAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB" launchStyle="0" useCustomWorkingDirectory="NO" ignoresPersistentStateOnLaunch="NO" debugDocumentVersioning="YES" debugServiceExtension="internal" allowLocationSimulation="YES">
+      <BuildableProductRunnable runnableDebuggingMode="0">
+         <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="A6F519B42F292AF4003875EA" BuildableName="jpc.fit.app" BlueprintName="jpc.fit.native" ReferencedContainer="container:jpc.fit.native.xcodeproj"/>
+      </BuildableProductRunnable>
+   </LaunchAction>
+</Scheme>
