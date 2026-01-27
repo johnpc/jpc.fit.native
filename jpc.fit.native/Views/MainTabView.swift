@@ -16,6 +16,11 @@ struct MainTabView: View {
                     Label("Weight", systemImage: "scalemass")
                 }
             
+            StatsView()
+                .tabItem {
+                    Label("Stats", systemImage: "chart.bar")
+                }
+            
             AphorismsView()
                 .tabItem {
                     Label("Quotes", systemImage: "quote.bubble")

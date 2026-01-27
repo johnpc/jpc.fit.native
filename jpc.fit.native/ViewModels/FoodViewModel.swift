@@ -27,14 +27,16 @@ class FoodViewModel: ObservableObject {
         async let foodsTask = api.fetchFoods(day: day)
         async let cacheTask = api.fetchHealthKitCache(day: day)
         async let quickAddsTask = api.fetchQuickAdds()
-        async let healthKitTask = syncHealthKit(day: day, date: date)
         
-        let (f, c, q, _) = await (foodsTask, cacheTask, quickAddsTask, healthKitTask)
+        let (f, c, q) = await (foodsTask, cacheTask, quickAddsTask)
         foods = f
         healthKitCache = c
         userQuickAdds = q
-        isLoading = false
         
+        // Sync HealthKit after we know if cache exists
+        await syncHealthKit(day: day, date: date)
+        
+        isLoading = false
         updateWidget(day: day)
     }
     
@@ -51,8 +53,12 @@ class FoodViewModel: ObservableObject {
     }
     
     private func updateWidget(day: String) {
-        SharedDataManager.shared.save(burned: burnedCalories, consumed: totalCalories, day: day)
-        WidgetCenter.shared.reloadAllTimelines()
+        // Only update widget with today's consumed calories
+        let today = Date().formatted(date: .numeric, time: .omitted)
+        if day == today {
+            SharedDataManager.shared.save(consumed: totalCalories)
+            WidgetCenter.shared.reloadAllTimelines()
+        }
     }
     
     private func syncHealthKit(day: String, date: Date) async {

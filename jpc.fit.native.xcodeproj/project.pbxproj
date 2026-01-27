@@ -8,6 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		391B662F390F79489D8E081F /* jpc.fit.widget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CCFEBEC96E61FFE2E5E96FB1 /* jpc.fit.widget.appex */; };
+		A615C5122F2962CB00F36993 /* Amplify in Frameworks */ = {isa = PBXBuildFile; productRef = AMPDEP01 /* Amplify */; };
+		A615C5132F2962CB00F36993 /* AWSCognitoAuthPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = AMPDEP02 /* AWSCognitoAuthPlugin */; };
+		A615C5142F2962CB00F36993 /* AWSAPIPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = AMPDEP03 /* AWSAPIPlugin */; };
+		A615C5152F2962CB00F36993 /* Authenticator in Frameworks */ = {isa = PBXBuildFile; productRef = AMPDEP04 /* Authenticator */; };
 		AE62A64FA675EE359B986EFC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B77EE78D417E47A7EDEB6BE /* Foundation.framework */; };
 		C4DB7B17D4D77C5F0665036B /* CalorieWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 772AC2455E6E3EE4796E639D /* CalorieWidget.swift */; };
 		CCF9B98E3B39BE620A5A3CC9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B77EE78D417E47A7EDEB6BE /* Foundation.framework */; };
@@ -49,16 +53,14 @@
 		3B77EE78D417E47A7EDEB6BE /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		407C94A290F3969B7142C63C /* jpc.fit.nativeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = jpc.fit.nativeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		772AC2455E6E3EE4796E639D /* CalorieWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CalorieWidget.swift; sourceTree = "<group>"; };
-		A6F519B52F292AF4003875EA /* jpc.fit.native.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = jpc.fit.native.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A6F519B52F292AF4003875EA /* jpc.fit.native.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = jpc.fit.native.app; path = jpc.fit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7F97C19BEA3DB4EDD306A57 /* DateNavigationUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DateNavigationUITests.swift; sourceTree = "<group>"; };
-		CCFEBEC96E61FFE2E5E96FB1 /* jpc.fit.widget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; name = jpc.fit.widget.appex; path = jpc.fit.widget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		CCFEBEC96E61FFE2E5E96FB1 /* jpc.fit.widget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = jpc.fit.widget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A6F519B72F292AF4003875EA /* jpc.fit.native */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = jpc.fit.native;
 			sourceTree = "<group>";
 		};
@@ -85,6 +87,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A615C5152F2962CB00F36993 /* Authenticator in Frameworks */,
+				A615C5142F2962CB00F36993 /* AWSAPIPlugin in Frameworks */,
+				A615C5132F2962CB00F36993 /* AWSCognitoAuthPlugin in Frameworks */,
+				A615C5122F2962CB00F36993 /* Amplify in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,7 +118,6 @@
 			children = (
 				772AC2455E6E3EE4796E639D /* CalorieWidget.swift */,
 			);
-			name = jpc.fit.widget;
 			path = jpc.fit.widget;
 			sourceTree = "<group>";
 		};
@@ -142,7 +147,6 @@
 			children = (
 				A7F97C19BEA3DB4EDD306A57 /* DateNavigationUITests.swift */,
 			);
-			name = jpc.fit.nativeUITests;
 			path = jpc.fit.nativeUITests;
 			sourceTree = "<group>";
 		};

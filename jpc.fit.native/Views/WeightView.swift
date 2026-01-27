@@ -26,6 +26,8 @@ struct WeightView: View {
     
     var body: some View {
         List {
+            HeaderSection()
+            
             Section("Health Data") {
                 HStack {
                     Text("Weight")

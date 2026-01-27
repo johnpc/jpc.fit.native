@@ -11,12 +11,16 @@ struct SettingsView: View {
     @State private var newProtein = ""
     @State private var newIcon = "🍽️"
     @State private var showDeleteAccount = false
+    @StateObject private var notifications = NotificationManager.shared
+    @State private var newReminderTime = Date()
     
     private var hideProtein: Bool { preferences?.hideProtein ?? false }
     private var hideSteps: Bool { preferences?.hideSteps ?? false }
     
     var body: some View {
         List {
+            HeaderSection()
+            
             Section {
                 DisclosureGroup("Why T-Shirt Sizes?") {
                     Text("**The philosophy of jpc.fit is that mindful eating is more important than counting every calorie exactly perfectly.**")
@@ -28,6 +32,34 @@ struct SettingsView: View {
                     Text("If this philosophy doesn't work for you, you can create custom quick adds for your most common meals.")
                         .font(.callout)
                         .padding(.vertical, 4)
+                }
+            }
+            
+            Section("Daily Notifications") {
+                if notifications.isEnabled {
+                    ForEach(Array(notifications.reminderTimes.enumerated()), id: \.offset) { i, time in
+                        HStack {
+                            Text(formatTime(time))
+                            Spacer()
+                        }
+                        .swipeActions { Button("Delete", role: .destructive) { notifications.removeTime(at: i) } }
+                    }
+                    HStack {
+                        DatePicker("", selection: $newReminderTime, displayedComponents: .hourAndMinute)
+                            .labelsHidden()
+                        Spacer()
+                        Button("Add") {
+                            notifications.addTime(newReminderTime)
+                        }
+                        .buttonStyle(.borderless)
+                    }
+                    Button("Disable Notifications", role: .destructive) {
+                        notifications.disable()
+                    }
+                } else {
+                    Button("Enable Reminder Notifications") {
+                        Task { await notifications.requestPermission() }
+                    }
                 }
             }
             
@@ -241,5 +273,14 @@ struct SettingsView: View {
         newCalories = ""
         newProtein = ""
         newIcon = "🍽️"
+    }
+    
+    private func formatTime(_ dc: DateComponents) -> String {
+        var cal = Calendar.current
+        cal.timeZone = .current
+        guard let date = cal.date(from: dc) else { return "" }
+        let f = DateFormatter()
+        f.timeStyle = .short
+        return f.string(from: date)
     }
 }

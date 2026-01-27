@@ -1,11 +1,6 @@
 import WidgetKit
 import SwiftUI
-
-struct SharedData: Codable {
-    var burned: Int
-    var consumed: Int
-    var day: String
-}
+import HealthKit
 
 struct CalorieEntry: TimelineEntry {
     let date: Date
@@ -16,31 +11,58 @@ struct CalorieEntry: TimelineEntry {
 
 struct Provider: TimelineProvider {
     private let suiteName = "group.com.johncorser.fit"
+    private let store = HKHealthStore()
     
     func placeholder(in context: Context) -> CalorieEntry {
         CalorieEntry(date: Date(), burned: 2000, consumed: 1500)
     }
     
     func getSnapshot(in context: Context, completion: @escaping (CalorieEntry) -> Void) {
-        let entry = loadFromShared() ?? CalorieEntry(date: Date(), burned: 2000, consumed: 1500)
-        completion(entry)
+        Task {
+            let entry = await fetchEntry()
+            completion(entry)
+        }
     }
     
     func getTimeline(in context: Context, completion: @escaping (Timeline<CalorieEntry>) -> Void) {
-        let entry = loadFromShared() ?? CalorieEntry(date: Date(), burned: 0, consumed: 0)
-        let timeline = Timeline(entries: [entry], policy: .after(Date().addingTimeInterval(15 * 60)))
-        completion(timeline)
+        Task {
+            let entry = await fetchEntry()
+            let timeline = Timeline(entries: [entry], policy: .after(Date().addingTimeInterval(15 * 60)))
+            completion(timeline)
+        }
     }
     
-    private func loadFromShared() -> CalorieEntry? {
+    private func fetchEntry() async -> CalorieEntry {
+        async let burned = fetchHealthKitCalories()
+        let consumed = loadConsumedFromShared()
+        return CalorieEntry(date: Date(), burned: await burned, consumed: consumed)
+    }
+    
+    private func loadConsumedFromShared() -> Int {
         guard let defaults = UserDefaults(suiteName: suiteName),
-              let data = defaults.data(forKey: "widgetData"),
-              let shared = try? JSONDecoder().decode(SharedData.self, from: data) else { return nil }
+              let consumed = defaults.value(forKey: "todayConsumed") as? Int else { return 0 }
+        return consumed
+    }
+    
+    private func fetchHealthKitCalories() async -> Int {
+        guard HKHealthStore.isHealthDataAvailable() else { return 0 }
         
-        let today = Date().formatted(date: .numeric, time: .omitted)
-        guard shared.day == today else { return nil }
+        let start = Calendar.current.startOfDay(for: Date())
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: Date())
         
-        return CalorieEntry(date: Date(), burned: shared.burned, consumed: shared.consumed)
+        async let active = querySum(type: .activeEnergyBurned, predicate: predicate)
+        async let basal = querySum(type: .basalEnergyBurned, predicate: predicate)
+        
+        return await Int(active + basal)
+    }
+    
+    private func querySum(type: HKQuantityTypeIdentifier, predicate: NSPredicate) async -> Double {
+        await withCheckedContinuation { cont in
+            let query = HKStatisticsQuery(quantityType: HKQuantityType(type), quantitySamplePredicate: predicate, options: .cumulativeSum) { _, result, _ in
+                cont.resume(returning: result?.sumQuantity()?.doubleValue(for: .kilocalorie()) ?? 0)
+            }
+            store.execute(query)
+        }
     }
 }
 
