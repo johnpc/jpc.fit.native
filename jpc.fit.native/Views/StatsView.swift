@@ -108,6 +108,9 @@ struct StatsView: View {
         .navigationTitle("Stats")
         .task { await fetchWeek(); await fetchStreak() }
         .refreshable { await fetchWeek(); await fetchStreak() }
+        .onReceive(NotificationCenter.default.publisher(for: .foodDataChanged)) { _ in
+            Task { await fetchWeek(); await fetchStreak() }
+        }
         .overlay { if isLoading { ProgressView() } }
     }
     

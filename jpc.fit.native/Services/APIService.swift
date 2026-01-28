@@ -6,7 +6,7 @@ actor APIService {
     
     func fetchFoods(day: String) async -> [Food] {
         let req = GraphQLRequest<JSONValue>(
-            document: "query($day:String!){listFoodByDay(day:$day){items{id name calories day createdAt}}}",
+            document: "query($day:String!){listFoodByDay(day:$day){items{id name calories protein day createdAt}}}",
             variables: ["day": day], responseType: JSONValue.self)
         guard case .success(let data) = try? await Amplify.API.query(request: req),
               let items = data.value(at: "listFoodByDay.items"),
@@ -77,7 +77,8 @@ actor APIService {
               case .number(let cal) = item.value(at: "calories"),
               case .string(let day) = item.value(at: "day") else { return nil }
         let name: String? = if case .string(let n) = item.value(at: "name") { n } else { nil }
-        return Food(id: id, name: name, calories: Int(cal), day: day)
+        let protein: Int? = if case .number(let p) = item.value(at: "protein") { Int(p) } else { nil }
+        return Food(id: id, name: name, calories: Int(cal), protein: protein, day: day)
     }
     
     private func parseCache(_ item: JSONValue) -> HealthKitCache? {
@@ -93,7 +94,10 @@ actor APIService {
         guard case .string(let id) = item.value(at: "id"),
               case .string(let name) = item.value(at: "name"),
               case .number(let cal) = item.value(at: "calories") else { return nil }
-        let icon: String = if case .string(let i) = item.value(at: "icon") { i } else { "🍽️" }
+        var icon = "🍽️"
+        if case .string(let i) = item.value(at: "icon") {
+            icon = i.unicodeScalars.first?.properties.isEmoji == true ? i : "🍽️"
+        }
         let protein: Int? = if case .number(let p) = item.value(at: "protein") { Int(p) } else { nil }
         return QuickAddItem(id: id, name: name, calories: Int(cal), icon: icon, protein: protein)
     }

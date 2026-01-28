@@ -13,6 +13,7 @@ struct SettingsView: View {
     @State private var showDeleteAccount = false
     @StateObject private var notifications = NotificationManager.shared
     @State private var newReminderTime = Date()
+    @State private var editingQuickAdd: QuickAdd?
     
     private var hideProtein: Bool { preferences?.hideProtein ?? false }
     private var hideSteps: Bool { preferences?.hideSteps ?? false }
@@ -85,15 +86,20 @@ struct SettingsView: View {
                     Text("No custom quick adds").foregroundStyle(.secondary)
                 } else {
                     ForEach(quickAdds, id: \.id) { qa in
-                        HStack {
-                            Text(qa.icon)
-                            Text(qa.name)
-                            Spacer()
-                            Text("\(qa.calories) cal").foregroundStyle(.secondary)
-                            if !hideProtein, let p = qa.protein {
-                                Text("\(p)g").foregroundStyle(.secondary)
+                        Button {
+                            editingQuickAdd = qa
+                        } label: {
+                            HStack {
+                                Text(iconDisplay(qa.icon))
+                                Text(qa.name)
+                                Spacer()
+                                Text("\(qa.calories) cal").foregroundStyle(.secondary)
+                                if !hideProtein, let p = qa.protein {
+                                    Text("\(p)g").foregroundStyle(.secondary)
+                                }
                             }
                         }
+                        .foregroundStyle(.primary)
                     }
                     .onDelete(perform: deleteQuickAdd)
                 }
@@ -135,6 +141,37 @@ struct SettingsView: View {
                         Button("Create") { createQuickAdd(); showCreateQuickAdd = false }
                             .disabled(newName.trimmingCharacters(in: .whitespaces).isEmpty || Int(newCalories) == nil)
                     }
+                }
+            }
+            .presentationDetents([.medium])
+        }
+        .sheet(item: $editingQuickAdd) { qa in
+            NavigationStack {
+                Form {
+                    EmojiTextField(text: $newIcon, placeholder: "Icon (emoji)")
+                    TextField("Name", text: $newName)
+                    TextField("Calories", text: $newCalories)
+                        .keyboardType(.numberPad)
+                    if !hideProtein {
+                        TextField("Protein (g)", text: $newProtein)
+                            .keyboardType(.numberPad)
+                    }
+                }
+                .navigationTitle("Edit Quick Add")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") { editingQuickAdd = nil; clearForm() }
+                    }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Save") { updateQuickAdd(qa); editingQuickAdd = nil }
+                    }
+                }
+                .onAppear {
+                    newName = qa.name
+                    newCalories = "\(qa.calories)"
+                    newProtein = qa.protein.map { "\($0)" } ?? ""
+                    newIcon = iconDisplay(qa.icon)
                 }
             }
             .presentationDetents([.medium])
@@ -246,6 +283,28 @@ struct SettingsView: View {
         clearForm()
     }
     
+    private func updateQuickAdd(_ qa: QuickAdd) {
+        let trimmedName = newName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty, let cal = Int(newCalories), cal > 0 else { 
+            clearForm()
+            return 
+        }
+        let icon = newIcon.isEmpty ? "🍽️" : newIcon
+        let protein = Int(newProtein)
+        Task {
+            var input: [String: Any] = ["id": qa.id, "name": trimmedName, "calories": cal, "icon": icon]
+            if let p = protein { input["protein"] = p }
+            let request = GraphQLRequest<JSONValue>(
+                document: "mutation UpdateQuickAdd($input: UpdateQuickAddInput!) { updateQuickAdd(input: $input) { id } }",
+                variables: ["input": input],
+                responseType: JSONValue.self
+            )
+            _ = try? await Amplify.API.mutate(request: request)
+            quickAdds = await fetchQuickAdds()
+        }
+        clearForm()
+    }
+    
     private func deleteQuickAdd(at offsets: IndexSet) {
         for i in offsets {
             let qa = quickAdds[i]
@@ -282,5 +341,9 @@ struct SettingsView: View {
         let f = DateFormatter()
         f.timeStyle = .short
         return f.string(from: date)
+    }
+    
+    private func iconDisplay(_ icon: String) -> String {
+        icon.unicodeScalars.first?.properties.isEmoji == true ? icon : "🍽️"
     }
 }

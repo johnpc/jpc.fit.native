@@ -5,8 +5,8 @@ struct EmojiTextField: UIViewRepresentable {
     @Binding var text: String
     var placeholder: String
     
-    func makeUIView(context: Context) -> UITextField {
-        let tf = UITextField()
+    func makeUIView(context: Context) -> EmojiUITextField {
+        let tf = EmojiUITextField()
         tf.placeholder = placeholder
         tf.textAlignment = .center
         tf.font = .systemFont(ofSize: 32)
@@ -14,7 +14,7 @@ struct EmojiTextField: UIViewRepresentable {
         return tf
     }
     
-    func updateUIView(_ uiView: UITextField, context: Context) {
+    func updateUIView(_ uiView: EmojiUITextField, context: Context) {
         uiView.text = text
     }
     
@@ -34,7 +34,6 @@ struct EmojiTextField: UIViewRepresentable {
         }
         
         func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-            // Limit to single emoji
             if string.isEmpty { return true }
             let newText = string.prefix(1)
             textField.text = String(newText)
@@ -44,8 +43,8 @@ struct EmojiTextField: UIViewRepresentable {
     }
 }
 
-extension UITextField {
-    override open var textInputMode: UITextInputMode? {
+class EmojiUITextField: UITextField {
+    override var textInputMode: UITextInputMode? {
         for mode in UITextInputMode.activeInputModes {
             if mode.primaryLanguage == "emoji" {
                 return mode

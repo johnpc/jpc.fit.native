@@ -2,7 +2,7 @@
 import Amplify
 import Foundation
 
-public struct QuickAdd: Model {
+public struct QuickAdd: Model, Identifiable {
   public let id: String
   public var name: String
   public var calories: Int

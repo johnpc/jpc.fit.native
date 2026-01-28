@@ -1,6 +1,10 @@
 import Foundation
 import WidgetKit
 
+extension Notification.Name {
+    static let foodDataChanged = Notification.Name("foodDataChanged")
+}
+
 @MainActor
 class FoodViewModel: ObservableObject {
     @Published var foods: [Food] = []
@@ -13,6 +17,7 @@ class FoodViewModel: ObservableObject {
     private let healthKit = HealthKitService.shared
     
     var totalCalories: Int { foods.reduce(0) { $0 + $1.calories } }
+    var totalProtein: Int { foods.reduce(0) { $0 + ($1.protein ?? 0) } }
     var burnedCalories: Int { Int(healthKitCache?.activeCalories ?? 0) + Int(healthKitCache?.baseCalories ?? 0) }
     var remainingCalories: Int { burnedCalories - totalCalories }
     var quickAdds: [QuickAddItem] { userQuickAdds.isEmpty ? defaultQuickAdds : userQuickAdds }
@@ -44,12 +49,14 @@ class FoodViewModel: ObservableObject {
         await api.createFood(name: name, calories: calories, protein: protein, day: day)
         foods = await api.fetchFoods(day: day)
         updateWidget(day: day)
+        NotificationCenter.default.post(name: .foodDataChanged, object: nil)
     }
     
     func deleteFood(_ food: Food, day: String) async {
         await api.deleteFood(id: food.id)
         foods = await api.fetchFoods(day: day)
         updateWidget(day: day)
+        NotificationCenter.default.post(name: .foodDataChanged, object: nil)
     }
     
     private func updateWidget(day: String) {

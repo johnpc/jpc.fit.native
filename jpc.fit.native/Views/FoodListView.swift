@@ -10,6 +10,7 @@ struct FoodListView: View {
     @State private var newFoodCalories = ""
     @State private var newFoodProtein = ""
     @State private var preferences: Preferences?
+    @FocusState private var nameFieldFocused: Bool
     
     var dayString: String { selectedDate.formatted(date: .numeric, time: .omitted) }
     var isToday: Bool { Calendar.current.isDateInToday(selectedDate) }
@@ -42,7 +43,7 @@ struct FoodListView: View {
                         .buttonStyle(.borderless)
                     }
                 }
-                RemainingSection(remaining: vm.remainingCalories)
+                RemainingSection(remaining: vm.remainingCalories, protein: vm.totalProtein, hideProtein: hideProtein)
                 HealthKitSection(cache: vm.healthKitCache, consumed: vm.totalCalories, hideSteps: preferences?.hideSteps ?? false)
                 FoodSection(foods: vm.foods, isLoading: vm.isLoading, dayString: dayString, onDelete: deleteFood)
                 QuickAddSection(quickAdds: vm.quickAdds, onQuickAdd: addQuickFood, onCustomAdd: { showingAddFood = true })
@@ -54,6 +55,9 @@ struct FoodListView: View {
                 NavigationStack {
                     Form {
                         TextField("Name", text: $newFoodName)
+                            .focused($nameFieldFocused)
+                            .textInputAutocapitalization(.words)
+                            .textContentType(.name)
                         TextField("Calories", text: $newFoodCalories)
                             .keyboardType(.numberPad)
                         if !hideProtein {
@@ -72,6 +76,7 @@ struct FoodListView: View {
                                 .disabled(newFoodCalories.isEmpty)
                         }
                     }
+                    .onAppear { nameFieldFocused = true }
                 }
                 .presentationDetents([.medium])
             }
