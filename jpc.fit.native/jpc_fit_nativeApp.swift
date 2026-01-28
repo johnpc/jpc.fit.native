@@ -2,11 +2,15 @@ import SwiftUI
 import Amplify
 import AWSCognitoAuthPlugin
 import AWSAPIPlugin
+import BackgroundTasks
 
 @main
 struct jpc_fit_nativeApp: App {
+    @Environment(\.scenePhase) private var scenePhase
+    
     init() {
         configureAmplify()
+        registerBackgroundTasks()
     }
     
     func configureAmplify() {
@@ -20,9 +24,26 @@ struct jpc_fit_nativeApp: App {
         }
     }
     
+    func registerBackgroundTasks() {
+        BGTaskScheduler.shared.register(forTaskWithIdentifier: "com.johncorser.fit.healthkitsync", using: nil) { task in
+            Task {
+                await BackgroundSyncService.shared.syncHealthKit()
+                task.setTaskCompleted(success: true)
+                BackgroundSyncService.shared.scheduleNextSync()
+            }
+        }
+    }
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .onChange(of: scenePhase) { _, phase in
+                    if phase == .active {
+                        Task { await BackgroundSyncService.shared.syncHealthKit() }
+                    } else if phase == .background {
+                        BackgroundSyncService.shared.scheduleNextSync()
+                    }
+                }
         }
     }
 }

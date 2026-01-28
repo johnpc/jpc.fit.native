@@ -11,4 +11,8 @@ class SharedDataManager {
     func save(consumed: Int) {
         defaults?.set(consumed, forKey: "todayConsumed")
     }
+    
+    func save(burned: Int) {
+        defaults?.set(burned, forKey: "todayBurned")
+    }
 }
