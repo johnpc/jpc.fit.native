@@ -2,7 +2,7 @@
 import Amplify
 import Foundation
 
-public struct Food: Model {
+public struct Food: Model, Identifiable {
   public let id: String
   public var name: String?
   public var calories: Int

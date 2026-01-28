@@ -11,7 +11,7 @@ actor APIService {
         guard case .success(let data) = try? await Amplify.API.query(request: req),
               let items = data.value(at: "listFoodByDay.items"),
               case .array(let arr) = items else { return [] }
-        return arr.compactMap { parseFood($0) }
+        return arr.compactMap { parseFood($0) }.sorted { ($0.createdAt?.iso8601String ?? "") < ($1.createdAt?.iso8601String ?? "") }
     }
     
     func fetchHealthKitCache(day: String) async -> HealthKitCache? {
@@ -50,6 +50,16 @@ actor APIService {
         _ = try? await Amplify.API.mutate(request: req)
     }
     
+    func updateFood(id: String, name: String?, calories: Int, protein: Int?) async {
+        var input: [String: Any] = ["id": id, "calories": calories]
+        if let n = name { input["name"] = n }
+        if let p = protein { input["protein"] = p }
+        let req = GraphQLRequest<JSONValue>(
+            document: "mutation($input:UpdateFoodInput!){updateFood(input:$input){id}}",
+            variables: ["input": input], responseType: JSONValue.self)
+        _ = try? await Amplify.API.mutate(request: req)
+    }
+    
     func createHealthKitCache(activeCalories: Double, baseCalories: Double, steps: Double, day: String) async -> String? {
         let req = GraphQLRequest<JSONValue>(
             document: "mutation($input:CreateHealthKitCacheInput!){createHealthKitCache(input:$input){id}}",
@@ -78,7 +88,9 @@ actor APIService {
               case .string(let day) = item.value(at: "day") else { return nil }
         let name: String? = if case .string(let n) = item.value(at: "name") { n } else { nil }
         let protein: Int? = if case .number(let p) = item.value(at: "protein") { Int(p) } else { nil }
-        return Food(id: id, name: name, calories: Int(cal), protein: protein, day: day)
+        var createdAt: Temporal.DateTime? = nil
+        if case .string(let c) = item.value(at: "createdAt") { createdAt = try? Temporal.DateTime(iso8601String: c) }
+        return Food(id: id, name: name, calories: Int(cal), protein: protein, day: day, notes: nil, photos: nil, createdAt: createdAt, updatedAt: nil)
     }
     
     private func parseCache(_ item: JSONValue) -> HealthKitCache? {

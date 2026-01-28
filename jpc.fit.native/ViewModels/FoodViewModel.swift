@@ -59,6 +59,13 @@ class FoodViewModel: ObservableObject {
         NotificationCenter.default.post(name: .foodDataChanged, object: nil)
     }
     
+    func updateFood(id: String, name: String?, calories: Int, protein: Int?, day: String) async {
+        await api.updateFood(id: id, name: name, calories: calories, protein: protein)
+        foods = await api.fetchFoods(day: day)
+        updateWidget(day: day)
+        NotificationCenter.default.post(name: .foodDataChanged, object: nil)
+    }
+    
     private func updateWidget(day: String) {
         // Only update widget with today's consumed calories
         let today = Date().formatted(date: .numeric, time: .omitted)

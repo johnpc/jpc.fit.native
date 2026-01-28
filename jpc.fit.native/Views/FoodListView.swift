@@ -6,6 +6,7 @@ struct FoodListView: View {
     @StateObject private var vm = FoodViewModel()
     @State private var selectedDate = Date()
     @State private var showingAddFood = false
+    @State private var editingFood: Food?
     @State private var newFoodName = ""
     @State private var newFoodCalories = ""
     @State private var newFoodProtein = ""
@@ -45,7 +46,7 @@ struct FoodListView: View {
                 }
                 RemainingSection(remaining: vm.remainingCalories, protein: vm.totalProtein, hideProtein: hideProtein)
                 HealthKitSection(cache: vm.healthKitCache, consumed: vm.totalCalories, hideSteps: preferences?.hideSteps ?? false)
-                FoodSection(foods: vm.foods, isLoading: vm.isLoading, dayString: dayString, onDelete: deleteFood)
+                FoodSection(foods: vm.foods, isLoading: vm.isLoading, dayString: dayString, hideProtein: hideProtein, onDelete: deleteFood, onEdit: { editingFood = $0 })
                 QuickAddSection(quickAdds: vm.quickAdds, onQuickAdd: addQuickFood, onCustomAdd: { showingAddFood = true })
                 ErrorSection(error: vm.errorMessage)
             }
@@ -80,6 +81,35 @@ struct FoodListView: View {
                 }
                 .presentationDetents([.medium])
             }
+            .sheet(item: $editingFood) { food in
+                NavigationStack {
+                    Form {
+                        TextField("Name", text: $newFoodName)
+                        TextField("Calories", text: $newFoodCalories)
+                            .keyboardType(.numberPad)
+                        if !hideProtein {
+                            TextField("Protein (g)", text: $newFoodProtein)
+                                .keyboardType(.numberPad)
+                        }
+                    }
+                    .navigationTitle("Edit Food")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Cancel") { editingFood = nil; clearForm() }
+                        }
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Save") { updateFood(food); editingFood = nil }
+                        }
+                    }
+                    .onAppear {
+                        newFoodName = food.name ?? ""
+                        newFoodCalories = "\(food.calories)"
+                        newFoodProtein = food.protein.map { "\($0)" } ?? ""
+                    }
+                }
+                .presentationDetents([.medium])
+            }
             .onChange(of: selectedDate) { _, _ in Task { await vm.fetchAll(day: dayString, date: selectedDate) } }
         }
         .task {
@@ -90,13 +120,15 @@ struct FoodListView: View {
     }
     
     private func addQuickFood(_ qa: QuickAddItem) {
-        Task { await vm.addFood(name: qa.name, calories: qa.calories, protein: qa.protein, day: dayString) }
+        let name = "\(qa.icon) \(qa.name)"
+        Task { await vm.addFood(name: name, calories: qa.calories, protein: qa.protein, day: dayString) }
     }
     
     private func addCustomFood() {
         if let cal = Int(newFoodCalories), cal > 0 {
             let protein = Int(newFoodProtein)
-            Task { await vm.addFood(name: newFoodName.isEmpty ? "Food" : newFoodName, calories: cal, protein: protein, day: dayString) }
+            let name = "🍽️ \(newFoodName.isEmpty ? "Food" : newFoodName)"
+            Task { await vm.addFood(name: name, calories: cal, protein: protein, day: dayString) }
         }
         clearForm()
     }
@@ -109,6 +141,15 @@ struct FoodListView: View {
         newFoodName = ""
         newFoodCalories = ""
         newFoodProtein = ""
+    }
+    
+    private func updateFood(_ food: Food) {
+        guard let cal = Int(newFoodCalories), cal > 0 else { clearForm(); return }
+        let protein = Int(newFoodProtein)
+        Task {
+            await vm.updateFood(id: food.id, name: newFoodName.isEmpty ? nil : newFoodName, calories: cal, protein: protein, day: dayString)
+        }
+        clearForm()
     }
     
     private func fetchPreferences() async -> Preferences? {
