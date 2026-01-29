@@ -114,8 +114,10 @@ struct FoodListView: View {
         }
         .task {
             await vm.requestHealthKitPermission()
-            async let _ = vm.fetchAll(day: dayString, date: selectedDate)
             preferences = await fetchPreferences()
+        }
+        .onAppear {
+            Task { await vm.fetchAll(day: dayString, date: selectedDate) }
         }
     }
     

@@ -25,11 +25,14 @@ class NotificationManager: ObservableObject {
     
     func requestPermission() async -> Bool {
         do {
-            let granted = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])
-            await MainActor.run { isEnabled = granted }
-            if granted { scheduleNotifications() }
+            let granted = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
+            await MainActor.run { 
+                isEnabled = granted
+                if granted { scheduleNotifications() }
+            }
             return granted
         } catch {
+            print("Notification permission error: \(error)")
             return false
         }
     }
@@ -74,7 +77,12 @@ class NotificationManager: ObservableObject {
         let center = UNUserNotificationCenter.current()
         center.removeAllPendingNotificationRequests()
         
-        guard isEnabled else { return }
+        guard isEnabled else { 
+            print("Notifications not enabled, skipping schedule")
+            return 
+        }
+        
+        print("Scheduling \(reminderTimes.count) notifications")
         
         for (i, time) in reminderTimes.enumerated() {
             let content = UNMutableNotificationContent()
@@ -84,7 +92,13 @@ class NotificationManager: ObservableObject {
             
             let trigger = UNCalendarNotificationTrigger(dateMatching: time, repeats: true)
             let request = UNNotificationRequest(identifier: "reminder-\(i)", content: content, trigger: trigger)
-            center.add(request)
+            center.add(request) { error in
+                if let error = error {
+                    print("Failed to schedule notification: \(error)")
+                } else {
+                    print("Scheduled notification for \(time.hour ?? 0):\(time.minute ?? 0)")
+                }
+            }
         }
     }
     

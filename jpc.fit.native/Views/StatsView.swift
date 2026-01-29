@@ -8,6 +8,7 @@ struct StatsView: View {
     @State private var isLoading = true
     @State private var streakDays: Int?
     @State private var streakNet = 0
+    @State private var refreshTrigger = UUID()
     
     private var weekNet: Int { weekData.filter { $0.tracked }.reduce(0) { $0 + $1.net } }
     private var trackedCount: Int { weekData.filter { $0.tracked }.count }
@@ -106,10 +107,10 @@ struct StatsView: View {
             }
         }
         .navigationTitle("Stats")
-        .task { await fetchWeek(); await fetchStreak() }
+        .task(id: refreshTrigger) { await fetchWeek(); await fetchStreak() }
         .refreshable { await fetchWeek(); await fetchStreak() }
         .onReceive(NotificationCenter.default.publisher(for: .foodDataChanged)) { _ in
-            Task { await fetchWeek(); await fetchStreak() }
+            refreshTrigger = UUID()
         }
         .overlay { if isLoading { ProgressView() } }
     }

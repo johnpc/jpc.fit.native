@@ -54,6 +54,9 @@ struct SettingsView: View {
                         }
                         .buttonStyle(.borderless)
                     }
+                    Button("Re-schedule Notifications") {
+                        notifications.scheduleNotifications()
+                    }
                     Button("Disable Notifications", role: .destructive) {
                         notifications.disable()
                     }
