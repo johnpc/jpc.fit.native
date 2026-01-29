@@ -9,13 +9,14 @@ class WatchDataManager: NSObject, ObservableObject {
     static let shared = WatchDataManager()
     
     @Published var foods: [WatchFood] = []
-    @Published var quickAdds: [WatchQuickAdd] = []
+    @Published var userQuickAdds: [WatchQuickAdd] = []
     @Published var consumedCalories: Int = 0
     @Published var burnedCalories: Int = 0
     @Published var steps: Int = 0
     @Published var isLoading = false
     
     var remainingCalories: Int { burnedCalories - consumedCalories }
+    var quickAdds: [WatchQuickAdd] { userQuickAdds.isEmpty ? WatchQuickAdd.defaults : userQuickAdds }
     
     private let healthStore = HKHealthStore()
     private let session: WCSession? = WCSession.isSupported() ? WCSession.default : nil
@@ -79,6 +80,14 @@ class WatchDataManager: NSObject, ObservableObject {
         
         defaults?.set(burnedCalories, forKey: "watchBurned")
         updateComplication()
+        
+        // Send HealthKit data to phone for backend sync
+        session?.sendMessage([
+            "action": "syncHealthKit",
+            "activeCalories": a,
+            "baseCalories": b,
+            "steps": s
+        ], replyHandler: nil, errorHandler: nil)
     }
     
     private func querySum(_ type: HKQuantityTypeIdentifier, predicate: NSPredicate) async -> Double {
@@ -101,7 +110,7 @@ class WatchDataManager: NSObject, ObservableObject {
         
         if let data = defaults?.data(forKey: "watchQuickAdds"),
            let qa = try? JSONDecoder().decode([WatchQuickAdd].self, from: data) {
-            quickAdds = qa
+            userQuickAdds = qa
         }
     }
     
@@ -128,8 +137,8 @@ extension WatchDataManager: WCSessionDelegate {
                 foods = foodsData.compactMap { WatchFood(dict: $0) }
             }
             if let qaData = message["quickAdds"] as? [[String: Any]] {
-                quickAdds = qaData.compactMap { WatchQuickAdd(dict: $0) }
-                if let encoded = try? JSONEncoder().encode(quickAdds) {
+                userQuickAdds = qaData.compactMap { WatchQuickAdd(dict: $0) }
+                if let encoded = try? JSONEncoder().encode(userQuickAdds) {
                     defaults?.set(encoded, forKey: "watchQuickAdds")
                 }
             }
@@ -170,4 +179,19 @@ struct WatchQuickAdd: Identifiable, Codable {
         self.icon = dict["icon"] as? String ?? "🍽️"
         self.protein = dict["protein"] as? Int
     }
+    
+    init(id: String, name: String, calories: Int, icon: String, protein: Int?) {
+        self.id = id
+        self.name = name
+        self.calories = calories
+        self.icon = icon
+        self.protein = protein
+    }
+    
+    static let defaults: [WatchQuickAdd] = [
+        WatchQuickAdd(id: "dqa-100", name: "xx-small", calories: 100, icon: "🍎", protein: nil),
+        WatchQuickAdd(id: "dqa-250", name: "x-small", calories: 250, icon: "🍽️", protein: nil),
+        WatchQuickAdd(id: "dqa-500", name: "small", calories: 500, icon: "🍕", protein: nil),
+        WatchQuickAdd(id: "dqa-750", name: "medium", calories: 750, icon: "🍽️", protein: nil),
+    ]
 }

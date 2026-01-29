@@ -71,6 +71,18 @@ extension PhoneConnectivityManager: WCSessionDelegate {
                     NotificationCenter.default.post(name: .foodDataChanged, object: nil)
                 }
                 
+            case "syncHealthKit":
+                if let active = message["activeCalories"] as? Double,
+                   let base = message["baseCalories"] as? Double,
+                   let steps = message["steps"] as? Double {
+                    let cache = await api.fetchHealthKitCache(day: day)
+                    if let existing = cache {
+                        await api.updateHealthKitCache(id: existing.id, activeCalories: active, baseCalories: base, steps: steps)
+                    } else {
+                        _ = await api.createHealthKitCache(activeCalories: active, baseCalories: base, steps: steps, day: day)
+                    }
+                }
+                
             default:
                 break
             }
