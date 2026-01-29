@@ -570,6 +570,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = com.johncorser.fit.watchkitapp;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.johncorser.fit;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "jpc.fit needs access to your health data to display calories burned and steps.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -603,6 +604,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = com.johncorser.fit.watchkitapp;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.johncorser.fit;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "jpc.fit needs access to your health data to display calories burned and steps.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
