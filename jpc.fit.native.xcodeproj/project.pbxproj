@@ -57,8 +57,8 @@
 		67B61D8B14EE2E5B1D86C33F /* Embed Watch Content */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 16;
+			dstPath = "Watch";
+			dstSubfolderSpec = 1;
 			files = (
 				ED5356B415C5C02A0951541A /* com.johncorser.fit.watchkitapp Watch App.app in Embed Watch Content */,
 			);
@@ -79,7 +79,7 @@
 		EBE60D5ACC9A9868BA4FBD52 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "";
+			dstPath = "Watch";
 			dstSubfolderSpec = 13;
 			files = (
 				391B662F390F79489D8E081F /* jpc.fit.widget.appex in Embed Foundation Extensions */,
