@@ -1,19 +1,5 @@
-import SwiftUI
 import WidgetKit
-
-@main
-struct jpc_fit_watchApp: App {
-    @StateObject private var dataManager = WatchDataManager.shared
-    
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-                .environmentObject(dataManager)
-        }
-    }
-}
-
-// MARK: - Complication Widget
+import SwiftUI
 
 struct CaloriesEntry: TimelineEntry {
     let date: Date

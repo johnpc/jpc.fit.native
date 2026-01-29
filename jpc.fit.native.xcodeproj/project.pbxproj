@@ -12,6 +12,9 @@
 		A615C5132F2962CB00F36993 /* AWSCognitoAuthPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = AMPDEP02 /* AWSCognitoAuthPlugin */; };
 		A615C5142F2962CB00F36993 /* AWSAPIPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = AMPDEP03 /* AWSAPIPlugin */; };
 		A615C5152F2962CB00F36993 /* Authenticator in Frameworks */ = {isa = PBXBuildFile; productRef = AMPDEP04 /* Authenticator */; };
+		A615C90F2F2BFDBC00F36993 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A615C90E2F2BFDBC00F36993 /* WidgetKit.framework */; };
+		A615C9112F2BFDBC00F36993 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A615C9102F2BFDBC00F36993 /* SwiftUI.framework */; };
+		A615C9202F2BFDBD00F36993 /* com.johncorser.fit.watchkitappExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A615C90D2F2BFDBC00F36993 /* com.johncorser.fit.watchkitappExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		AE62A64FA675EE359B986EFC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B77EE78D417E47A7EDEB6BE /* Foundation.framework */; };
 		C4DB7B17D4D77C5F0665036B /* CalorieWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 772AC2455E6E3EE4796E639D /* CalorieWidget.swift */; };
 		CCF9B98E3B39BE620A5A3CC9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B77EE78D417E47A7EDEB6BE /* Foundation.framework */; };
@@ -26,6 +29,13 @@
 			remoteGlobalIDString = A6F519B42F292AF4003875EA;
 			remoteInfo = jpc.fit.native;
 		};
+		A615C91E2F2BFDBD00F36993 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A6F519AD2F292AF4003875EA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A615C90C2F2BFDBC00F36993;
+			remoteInfo = com.johncorser.fit.watchkitappExtension;
+		};
 		E018967E52A42C488D3CD9EA /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = A6F519AD2F292AF4003875EA /* Project object */;
@@ -36,6 +46,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		A615C9252F2BFDBD00F36993 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				A615C9202F2BFDBD00F36993 /* com.johncorser.fit.watchkitappExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		EBE60D5ACC9A9868BA4FBD52 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -54,15 +75,36 @@
 		407C94A290F3969B7142C63C /* jpc.fit.nativeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = jpc.fit.nativeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		772AC2455E6E3EE4796E639D /* CalorieWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CalorieWidget.swift; sourceTree = "<group>"; };
 		A615C8202F2BF9D100F36993 /* com.johncorser.fit.watchkitapp Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "com.johncorser.fit.watchkitapp Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A615C90D2F2BFDBC00F36993 /* com.johncorser.fit.watchkitappExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = com.johncorser.fit.watchkitappExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		A615C90E2F2BFDBC00F36993 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		A615C9102F2BFDBC00F36993 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		A6F519B52F292AF4003875EA /* jpc.fit.native.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = jpc.fit.native.app; path = jpc.fit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7F97C19BEA3DB4EDD306A57 /* DateNavigationUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DateNavigationUITests.swift; sourceTree = "<group>"; };
 		CCFEBEC96E61FFE2E5E96FB1 /* jpc.fit.widget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = jpc.fit.widget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A615C9212F2BFDBD00F36993 /* Exceptions for "com.johncorser.fit.watchkitapp" folder in "com.johncorser.fit.watchkitappExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = A615C90C2F2BFDBC00F36993 /* com.johncorser.fit.watchkitappExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A615C8212F2BF9D100F36993 /* com.johncorser.fit.watchkitapp Watch App */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "com.johncorser.fit.watchkitapp Watch App";
+			sourceTree = "<group>";
+		};
+		A615C9122F2BFDBC00F36993 /* com.johncorser.fit.watchkitapp */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				A615C9212F2BFDBD00F36993 /* Exceptions for "com.johncorser.fit.watchkitapp" folder in "com.johncorser.fit.watchkitappExtension" target */,
+			);
+			path = com.johncorser.fit.watchkitapp;
 			sourceTree = "<group>";
 		};
 		A6F519B72F292AF4003875EA /* jpc.fit.native */ = {
@@ -96,6 +138,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A615C90A2F2BFDBC00F36993 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A615C9112F2BFDBC00F36993 /* SwiftUI.framework in Frameworks */,
+				A615C90F2F2BFDBC00F36993 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A6F519B22F292AF4003875EA /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -122,6 +173,8 @@
 			isa = PBXGroup;
 			children = (
 				331D11C718DFDD150B7CEAA2 /* iOS */,
+				A615C90E2F2BFDBC00F36993 /* WidgetKit.framework */,
+				A615C9102F2BFDBC00F36993 /* SwiftUI.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -139,6 +192,7 @@
 			children = (
 				A6F519B72F292AF4003875EA /* jpc.fit.native */,
 				A615C8212F2BF9D100F36993 /* com.johncorser.fit.watchkitapp Watch App */,
+				A615C9122F2BFDBC00F36993 /* com.johncorser.fit.watchkitapp */,
 				A6F519B62F292AF4003875EA /* Products */,
 				810952CB964BBC37FBEB9B9B /* Frameworks */,
 				F803BBE417142F6C427A9199 /* jpc.fit.nativeUITests */,
@@ -153,6 +207,7 @@
 				407C94A290F3969B7142C63C /* jpc.fit.nativeUITests.xctest */,
 				CCFEBEC96E61FFE2E5E96FB1 /* jpc.fit.widget.appex */,
 				A615C8202F2BF9D100F36993 /* com.johncorser.fit.watchkitapp Watch App.app */,
+				A615C90D2F2BFDBC00F36993 /* com.johncorser.fit.watchkitappExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -210,10 +265,12 @@
 				A615C81C2F2BF9D100F36993 /* Sources */,
 				A615C81D2F2BF9D100F36993 /* Frameworks */,
 				A615C81E2F2BF9D100F36993 /* Resources */,
+				A615C9252F2BFDBD00F36993 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				A615C91F2F2BFDBD00F36993 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				A615C8212F2BF9D100F36993 /* com.johncorser.fit.watchkitapp Watch App */,
@@ -224,6 +281,28 @@
 			productName = "com.johncorser.fit.watchkitapp Watch App";
 			productReference = A615C8202F2BF9D100F36993 /* com.johncorser.fit.watchkitapp Watch App.app */;
 			productType = "com.apple.product-type.application";
+		};
+		A615C90C2F2BFDBC00F36993 /* com.johncorser.fit.watchkitappExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A615C9222F2BFDBD00F36993 /* Build configuration list for PBXNativeTarget "com.johncorser.fit.watchkitappExtension" */;
+			buildPhases = (
+				A615C9092F2BFDBC00F36993 /* Sources */,
+				A615C90A2F2BFDBC00F36993 /* Frameworks */,
+				A615C90B2F2BFDBC00F36993 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				A615C9122F2BFDBC00F36993 /* com.johncorser.fit.watchkitapp */,
+			);
+			name = com.johncorser.fit.watchkitappExtension;
+			packageProductDependencies = (
+			);
+			productName = com.johncorser.fit.watchkitappExtension;
+			productReference = A615C90D2F2BFDBC00F36993 /* com.johncorser.fit.watchkitappExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 		A6F519B42F292AF4003875EA /* jpc.fit.native */ = {
 			isa = PBXNativeTarget;
@@ -266,6 +345,9 @@
 					A615C81F2F2BF9D100F36993 = {
 						CreatedOnToolsVersion = 26.1.1;
 					};
+					A615C90C2F2BFDBC00F36993 = {
+						CreatedOnToolsVersion = 26.1.1;
+					};
 					A6F519B42F292AF4003875EA = {
 						CreatedOnToolsVersion = 26.1.1;
 					};
@@ -293,6 +375,7 @@
 				42644E9E73094AB8A004D660 /* jpc.fit.nativeUITests */,
 				5CDDE555BD289B4A41037A9A /* jpc.fit.widget */,
 				A615C81F2F2BF9D100F36993 /* com.johncorser.fit.watchkitapp Watch App */,
+				A615C90C2F2BFDBC00F36993 /* com.johncorser.fit.watchkitappExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -306,6 +389,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		A615C81E2F2BF9D100F36993 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A615C90B2F2BFDBC00F36993 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -344,6 +434,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A615C9092F2BFDBC00F36993 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A6F519B12F292AF4003875EA /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -373,6 +470,11 @@
 			name = jpc.fit.widget;
 			target = 5CDDE555BD289B4A41037A9A /* jpc.fit.widget */;
 			targetProxy = E018967E52A42C488D3CD9EA /* PBXContainerItemProxy */;
+		};
+		A615C91F2F2BFDBD00F36993 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A615C90C2F2BFDBC00F36993 /* com.johncorser.fit.watchkitappExtension */;
+			targetProxy = A615C91E2F2BFDBD00F36993 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -467,7 +569,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = com.johncorser.fit.watchkitapp;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "com.johncorser.fit";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.johncorser.fit;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -500,7 +602,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = com.johncorser.fit.watchkitapp;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "com.johncorser.fit";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.johncorser.fit;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -513,6 +615,72 @@
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.1;
+			};
+			name = Release;
+		};
+		A615C9232F2BFDBD00F36993 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JW5SC3NYUV;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = com.johncorser.fit.watchkitapp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = com.johncorser.fit.watchkitapp;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.johncorser.fit.watchkitapp.com-johncorser-fit-watchkitapp";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.1;
+			};
+			name = Debug;
+		};
+		A615C9242F2BFDBD00F36993 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JW5SC3NYUV;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = com.johncorser.fit.watchkitapp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = com.johncorser.fit.watchkitapp;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.johncorser.fit.watchkitapp.com-johncorser-fit-watchkitapp";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
@@ -743,6 +911,15 @@
 			buildConfigurations = (
 				A615C8282F2BF9D200F36993 /* Debug */,
 				A615C8292F2BF9D200F36993 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A615C9222F2BFDBD00F36993 /* Build configuration list for PBXNativeTarget "com.johncorser.fit.watchkitappExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A615C9232F2BFDBD00F36993 /* Debug */,
+				A615C9242F2BFDBD00F36993 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

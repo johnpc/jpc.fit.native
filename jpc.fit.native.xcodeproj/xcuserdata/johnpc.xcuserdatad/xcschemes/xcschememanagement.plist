@@ -9,6 +9,11 @@
 			<key>orderHint</key>
 			<integer>19</integer>
 		</dict>
+		<key>com.johncorser.fit.watchkitappExtension.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>20</integer>
+		</dict>
 		<key>jpc.fit.native.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
