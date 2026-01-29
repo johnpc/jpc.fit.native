@@ -3,10 +3,12 @@ import Amplify
 import AWSCognitoAuthPlugin
 import AWSAPIPlugin
 import BackgroundTasks
+import WatchConnectivity
 
 @main
 struct jpc_fit_nativeApp: App {
     @Environment(\.scenePhase) private var scenePhase
+    private let connectivityManager = PhoneConnectivityManager.shared
     
     init() {
         configureAmplify()
