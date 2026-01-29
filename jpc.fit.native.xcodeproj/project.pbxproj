@@ -19,6 +19,7 @@
 		C4DB7B17D4D77C5F0665036B /* CalorieWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 772AC2455E6E3EE4796E639D /* CalorieWidget.swift */; };
 		CCF9B98E3B39BE620A5A3CC9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B77EE78D417E47A7EDEB6BE /* Foundation.framework */; };
 		D03938E9BF8560870493DB56 /* DateNavigationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F97C19BEA3DB4EDD306A57 /* DateNavigationUITests.swift */; };
+		ED5356B415C5C02A0951541A /* com.johncorser.fit.watchkitapp Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = A615C8202F2BF9D100F36993 /* com.johncorser.fit.watchkitapp Watch App.app */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -28,6 +29,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = A6F519B42F292AF4003875EA;
 			remoteInfo = jpc.fit.native;
+		};
+		A19F8D3B6D8DE20470B8649A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A6F519AD2F292AF4003875EA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A615C81F2F2BF9D100F36993;
+			remoteInfo = "com.johncorser.fit.watchkitapp Watch App";
 		};
 		A615C91E2F2BFDBD00F36993 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -46,6 +54,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		67B61D8B14EE2E5B1D86C33F /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 16;
+			files = (
+				ED5356B415C5C02A0951541A /* com.johncorser.fit.watchkitapp Watch App.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A615C9252F2BFDBD00F36993 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -96,6 +115,8 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A615C8212F2BF9D100F36993 /* com.johncorser.fit.watchkitapp Watch App */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = "com.johncorser.fit.watchkitapp Watch App";
 			sourceTree = "<group>";
 		};
@@ -109,6 +130,8 @@
 		};
 		A6F519B72F292AF4003875EA /* jpc.fit.native */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = jpc.fit.native;
 			sourceTree = "<group>";
 		};
@@ -276,8 +299,6 @@
 				A615C8212F2BF9D100F36993 /* com.johncorser.fit.watchkitapp Watch App */,
 			);
 			name = "com.johncorser.fit.watchkitapp Watch App";
-			packageProductDependencies = (
-			);
 			productName = "com.johncorser.fit.watchkitapp Watch App";
 			productReference = A615C8202F2BF9D100F36993 /* com.johncorser.fit.watchkitapp Watch App.app */;
 			productType = "com.apple.product-type.application";
@@ -298,8 +319,6 @@
 				A615C9122F2BFDBC00F36993 /* com.johncorser.fit.watchkitapp */,
 			);
 			name = com.johncorser.fit.watchkitappExtension;
-			packageProductDependencies = (
-			);
 			productName = com.johncorser.fit.watchkitappExtension;
 			productReference = A615C90D2F2BFDBC00F36993 /* com.johncorser.fit.watchkitappExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -312,11 +331,13 @@
 				A6F519B22F292AF4003875EA /* Frameworks */,
 				A6F519B32F292AF4003875EA /* Resources */,
 				EBE60D5ACC9A9868BA4FBD52 /* Embed Foundation Extensions */,
+				67B61D8B14EE2E5B1D86C33F /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				58E939BA5214B64253F09C3A /* PBXTargetDependency */,
+				2CB86EBFF96B085133C4EB76 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				A6F519B72F292AF4003875EA /* jpc.fit.native */,
@@ -459,6 +480,12 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		2CB86EBFF96B085133C4EB76 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "com.johncorser.fit.watchkitapp Watch App";
+			target = A615C81F2F2BF9D100F36993 /* com.johncorser.fit.watchkitapp Watch App */;
+			targetProxy = A19F8D3B6D8DE20470B8649A /* PBXContainerItemProxy */;
+		};
 		58A5920358DA56001D77BF8C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = jpc.fit.native;
@@ -567,10 +594,10 @@
 				DEVELOPMENT_TEAM = JW5SC3NYUV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "jpc.fit";
+				INFOPLIST_KEY_CFBundleDisplayName = jpc.fit;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "jpc.fit needs access to your health data to display calories burned and steps.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.johncorser.fit;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "jpc.fit needs access to your health data to display calories burned and steps.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -601,10 +628,10 @@
 				DEVELOPMENT_TEAM = JW5SC3NYUV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "jpc.fit";
+				INFOPLIST_KEY_CFBundleDisplayName = jpc.fit;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "jpc.fit needs access to your health data to display calories burned and steps.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.johncorser.fit;
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "jpc.fit needs access to your health data to display calories burned and steps.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -635,7 +662,7 @@
 				DEVELOPMENT_TEAM = JW5SC3NYUV;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = com.johncorser.fit.watchkitapp/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "jpc.fit";
+				INFOPLIST_KEY_CFBundleDisplayName = jpc.fit;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -668,7 +695,7 @@
 				DEVELOPMENT_TEAM = JW5SC3NYUV;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = com.johncorser.fit.watchkitapp/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "jpc.fit";
+				INFOPLIST_KEY_CFBundleDisplayName = jpc.fit;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
