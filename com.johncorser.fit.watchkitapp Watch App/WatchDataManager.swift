@@ -94,27 +94,29 @@ class WatchDataManager: NSObject, ObservableObject {
         let end = cal.date(byAdding: .day, value: 1, to: start)!
         let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
         
-        async let active = querySum(.activeEnergyBurned, predicate: predicate)
-        async let basal = querySum(.basalEnergyBurned, predicate: predicate)
-        async let stepsVal = querySum(.stepCount, predicate: predicate)
+        let (a, aErr) = await querySum(.activeEnergyBurned, predicate: predicate)
+        let (b, bErr) = await querySum(.basalEnergyBurned, predicate: predicate)
+        let (s, _) = await querySum(.stepCount, predicate: predicate)
         
-        let (a, b, s) = await (active, basal, stepsVal)
-        burnedCalories = Int(a + b)
-        steps = Int(s)
-        authStatus = "HK: \(Int(a))+\(Int(b))=\(burnedCalories)"
+        if let err = aErr ?? bErr {
+            authStatus = "Err: \(err.localizedDescription.prefix(25))"
+        } else {
+            burnedCalories = Int(a + b)
+            steps = Int(s)
+            authStatus = "HK: \(Int(a))+\(Int(b))=\(burnedCalories)"
+            defaults?.set(burnedCalories, forKey: "watchBurned")
+        }
         
-        defaults?.set(burnedCalories, forKey: "watchBurned")
         updateComplication()
-        
-        // Signal phone to sync HealthKit
         session?.sendMessage(["action": "syncHealthKit"], replyHandler: nil, errorHandler: nil)
     }
     
-    private func querySum(_ type: HKQuantityTypeIdentifier, predicate: NSPredicate) async -> Double {
+    private func querySum(_ type: HKQuantityTypeIdentifier, predicate: NSPredicate) async -> (Double, Error?) {
         await withCheckedContinuation { cont in
-            let query = HKStatisticsQuery(quantityType: HKQuantityType(type), quantitySamplePredicate: predicate, options: .cumulativeSum) { _, stats, _ in
+            let query = HKStatisticsQuery(quantityType: HKQuantityType(type), quantitySamplePredicate: predicate, options: .cumulativeSum) { _, stats, error in
                 let unit: HKUnit = type == .stepCount ? .count() : .kilocalorie()
-                cont.resume(returning: stats?.sumQuantity()?.doubleValue(for: unit) ?? 0)
+                let value = stats?.sumQuantity()?.doubleValue(for: unit) ?? 0
+                cont.resume(returning: (value, error))
             }
             healthStore.execute(query)
         }
