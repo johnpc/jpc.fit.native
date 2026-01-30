@@ -79,7 +79,7 @@
 		EBE60D5ACC9A9868BA4FBD52 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "Watch";
+			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
 				391B662F390F79489D8E081F /* jpc.fit.widget.appex in Embed Foundation Extensions */,
