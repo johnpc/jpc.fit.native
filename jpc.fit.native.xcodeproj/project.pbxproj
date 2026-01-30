@@ -596,6 +596,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = jpc.fit;
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "jpc.fit needs access to your health data to display calories burned and steps.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "jpc.fit needs access to update your health data.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.johncorser.fit;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -630,6 +631,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = jpc.fit;
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "jpc.fit needs access to your health data to display calories burned and steps.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "jpc.fit needs access to update your health data.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.johncorser.fit;
 				LD_RUNPATH_SEARCH_PATHS = (
