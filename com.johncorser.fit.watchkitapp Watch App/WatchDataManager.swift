@@ -30,7 +30,10 @@ class WatchDataManager: NSObject, ObservableObject {
     }
     
     func requestHealthKitAuth() async {
-        guard HKHealthStore.isHealthDataAvailable() else { return }
+        guard HKHealthStore.isHealthDataAvailable() else {
+            print("HealthKit not available on this device")
+            return
+        }
         let types: Set<HKQuantityType> = [
             HKQuantityType(.activeEnergyBurned),
             HKQuantityType(.basalEnergyBurned),
@@ -38,6 +41,9 @@ class WatchDataManager: NSObject, ObservableObject {
         ]
         do {
             try await healthStore.requestAuthorization(toShare: [], read: types)
+            print("HealthKit auth requested successfully")
+            // Fetch immediately after auth
+            await fetchHealthKitData()
         } catch {
             print("HealthKit auth error: \(error)")
         }

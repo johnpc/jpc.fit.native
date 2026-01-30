@@ -119,6 +119,9 @@ struct FoodListView: View {
         .onAppear {
             Task { await vm.fetchAll(day: dayString, date: selectedDate) }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .foodDataChanged)) { _ in
+            Task { await vm.fetchAll(day: dayString, date: selectedDate) }
+        }
     }
     
     private func addQuickFood(_ qa: QuickAddItem) {
