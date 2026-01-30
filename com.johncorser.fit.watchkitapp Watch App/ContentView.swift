@@ -73,7 +73,6 @@ struct ContentView: View {
             }
         }
         .task {
-            await dataManager.requestHealthKitAuth()
             await dataManager.refresh()
         }
     }

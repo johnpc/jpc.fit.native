@@ -53,15 +53,9 @@ class WatchDataManager: NSObject, ObservableObject {
     func refresh() async {
         isLoading = true
         
-        // Try watch HealthKit first
-        await fetchHealthKitData()
-        
-        // Request data from phone (works even if phone app not in foreground)
+        // Request data from phone
         if let session, session.activationState == .activated {
-            // transferUserInfo queues the request even if phone is unreachable
             session.transferUserInfo(["action": "requestData"])
-            
-            // Also try direct message if reachable
             if session.isReachable {
                 session.sendMessage(["action": "requestData"], replyHandler: nil, errorHandler: nil)
             }
@@ -140,8 +134,8 @@ class WatchDataManager: NSObject, ObservableObject {
         defaults?.set(consumedCalories, forKey: "watchConsumed")
         defaults?.set(burnedCalories, forKey: "watchBurned")
         defaults?.set(remainingCalories, forKey: "watchRemaining")
+        defaults?.synchronize()
         
-        // Reload WidgetKit complications
         WidgetCenter.shared.reloadAllTimelines()
     }
 }
@@ -154,10 +148,8 @@ extension WatchDataManager: WCSessionDelegate {
             if let consumed = message["consumed"] as? Int {
                 consumedCalories = consumed
             }
-            if let burned = message["burned"] as? Int, burned > 0 {
+            if let burned = message["burned"] as? Int {
                 burnedCalories = burned
-                defaults?.set(burned, forKey: "watchBurned")
-                authStatus = "Phone: \(burned)"
             }
             if let foodsData = message["foods"] as? [[String: Any]] {
                 foods = foodsData.compactMap { WatchFood(dict: $0) }
@@ -168,6 +160,7 @@ extension WatchDataManager: WCSessionDelegate {
                     defaults?.set(encoded, forKey: "watchQuickAdds")
                 }
             }
+            authStatus = "Phone"
             updateComplication()
         }
     }
