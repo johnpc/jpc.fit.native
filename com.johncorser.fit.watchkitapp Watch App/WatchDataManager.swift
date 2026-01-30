@@ -30,18 +30,27 @@ class WatchDataManager: NSObject, ObservableObject {
     }
     
     func requestHealthKitAuth() async {
+        guard HKHealthStore.isHealthDataAvailable() else { return }
         let types: Set<HKQuantityType> = [
             HKQuantityType(.activeEnergyBurned),
             HKQuantityType(.basalEnergyBurned),
             HKQuantityType(.stepCount)
         ]
-        try? await healthStore.requestAuthorization(toShare: [], read: types)
+        do {
+            try await healthStore.requestAuthorization(toShare: [], read: types)
+        } catch {
+            print("HealthKit auth error: \(error)")
+        }
     }
     
     func refresh() async {
         isLoading = true
         await fetchHealthKitData()
-        requestDataFromPhone()
+        
+        // Try to get food data from phone if reachable
+        if session?.isReachable == true {
+            requestDataFromPhone()
+        }
         isLoading = false
     }
     
