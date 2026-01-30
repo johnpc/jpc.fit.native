@@ -4,9 +4,21 @@ import AWSCognitoAuthPlugin
 import AWSAPIPlugin
 import BackgroundTasks
 import WatchConnectivity
+import HealthKit
+
+class AppDelegate: NSObject, UIApplicationDelegate {
+    func applicationShouldRequestHealthAuthorization(_ application: UIApplication) {
+        HKHealthStore().handleAuthorizationForExtension { success, error in
+            if let error {
+                print("Watch HealthKit auth error: \(error)")
+            }
+        }
+    }
+}
 
 @main
 struct jpc_fit_nativeApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @Environment(\.scenePhase) private var scenePhase
     private let connectivityManager = PhoneConnectivityManager.shared
     
