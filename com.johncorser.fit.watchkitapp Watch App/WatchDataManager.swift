@@ -2,7 +2,7 @@ import Foundation
 import Combine
 import WatchConnectivity
 import HealthKit
-import ClockKit
+import WidgetKit
 
 @MainActor
 class WatchDataManager: NSObject, ObservableObject {
@@ -125,12 +125,11 @@ class WatchDataManager: NSObject, ObservableObject {
     
     private func updateComplication() {
         defaults?.set(consumedCalories, forKey: "watchConsumed")
+        defaults?.set(burnedCalories, forKey: "watchBurned")
         defaults?.set(remainingCalories, forKey: "watchRemaining")
         
-        let server = CLKComplicationServer.sharedInstance()
-        for complication in server.activeComplications ?? [] {
-            server.reloadTimeline(for: complication)
-        }
+        // Reload WidgetKit complications
+        WidgetCenter.shared.reloadAllTimelines()
     }
 }
 
@@ -141,6 +140,10 @@ extension WatchDataManager: WCSessionDelegate {
         Task { @MainActor in
             if let consumed = message["consumed"] as? Int {
                 consumedCalories = consumed
+            }
+            if let burned = message["burned"] as? Int {
+                burnedCalories = burned
+                defaults?.set(burned, forKey: "watchBurned")
             }
             if let foodsData = message["foods"] as? [[String: Any]] {
                 foods = foodsData.compactMap { WatchFood(dict: $0) }
