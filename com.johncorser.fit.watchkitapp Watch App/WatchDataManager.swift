@@ -136,10 +136,7 @@ extension WatchDataManager: WCSessionDelegate {
             if let consumed = message["consumed"] as? Int {
                 consumedCalories = consumed
             }
-            if let burned = message["burned"] as? Int {
-                burnedCalories = burned
-                defaults?.set(burned, forKey: "watchBurned")
-            }
+            // Don't accept burned from phone - watch uses its own HealthKit
             if let foodsData = message["foods"] as? [[String: Any]] {
                 foods = foodsData.compactMap { WatchFood(dict: $0) }
             }
