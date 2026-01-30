@@ -90,13 +90,8 @@ class WatchDataManager: NSObject, ObservableObject {
         defaults?.set(burnedCalories, forKey: "watchBurned")
         updateComplication()
         
-        // Send HealthKit data to phone for backend sync
-        session?.sendMessage([
-            "action": "syncHealthKit",
-            "activeCalories": a,
-            "baseCalories": b,
-            "steps": s
-        ], replyHandler: nil, errorHandler: nil)
+        // Signal phone to sync HealthKit
+        session?.sendMessage(["action": "syncHealthKit"], replyHandler: nil, errorHandler: nil)
     }
     
     private func querySum(_ type: HKQuantityTypeIdentifier, predicate: NSPredicate) async -> Double {
