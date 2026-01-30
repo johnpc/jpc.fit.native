@@ -46,7 +46,15 @@ extension PhoneConnectivityManager: WCSessionDelegate {
     nonisolated func sessionDidBecomeInactive(_ session: WCSession) {}
     nonisolated func sessionDidDeactivate(_ session: WCSession) { session.activate() }
     
+    nonisolated func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
+        handleMessage(userInfo)
+    }
+    
     nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
+        handleMessage(message)
+    }
+    
+    private nonisolated func handleMessage(_ message: [String: Any]) {
         Task { @MainActor in
             guard let action = message["action"] as? String else { return }
             let day = Date().formatted(date: .numeric, time: .omitted)

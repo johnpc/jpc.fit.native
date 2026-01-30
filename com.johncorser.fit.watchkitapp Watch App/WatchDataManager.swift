@@ -8,6 +8,7 @@ import WidgetKit
 class WatchDataManager: NSObject, ObservableObject {
     static let shared = WatchDataManager()
     
+    @Published var authStatus: String = ""
     @Published var foods: [WatchFood] = []
     @Published var userQuickAdds: [WatchQuickAdd] = []
     @Published var consumedCalories: Int = 0
@@ -31,31 +32,39 @@ class WatchDataManager: NSObject, ObservableObject {
     
     func requestHealthKitAuth() async {
         guard HKHealthStore.isHealthDataAvailable() else {
-            print("HealthKit not available on this device")
+            authStatus = "HK unavailable"
             return
         }
-        let types: Set<HKQuantityType> = [
-            HKQuantityType(.activeEnergyBurned),
-            HKQuantityType(.basalEnergyBurned),
-            HKQuantityType(.stepCount)
-        ]
+        
+        let activeType = HKQuantityType(.activeEnergyBurned)
+        let basalType = HKQuantityType(.basalEnergyBurned)
+        let stepsType = HKQuantityType(.stepCount)
+        let types: Set<HKQuantityType> = [activeType, basalType, stepsType]
+        
         do {
             try await healthStore.requestAuthorization(toShare: [], read: types)
-            print("HealthKit auth requested successfully")
-            // Fetch immediately after auth
+            // Check if we can actually query
             await fetchHealthKitData()
         } catch {
-            print("HealthKit auth error: \(error)")
+            authStatus = "Err: \(error.localizedDescription.prefix(30))"
         }
     }
     
     func refresh() async {
         isLoading = true
+        
+        // Try watch HealthKit first
         await fetchHealthKitData()
         
-        // Try to get food data from phone if reachable
-        if session?.isReachable == true {
-            requestDataFromPhone()
+        // Request data from phone (works even if phone app not in foreground)
+        if let session, session.activationState == .activated {
+            // transferUserInfo queues the request even if phone is unreachable
+            session.transferUserInfo(["action": "requestData"])
+            
+            // Also try direct message if reachable
+            if session.isReachable {
+                session.sendMessage(["action": "requestData"], replyHandler: nil, errorHandler: nil)
+            }
         }
         isLoading = false
     }
@@ -92,6 +101,7 @@ class WatchDataManager: NSObject, ObservableObject {
         let (a, b, s) = await (active, basal, stepsVal)
         burnedCalories = Int(a + b)
         steps = Int(s)
+        authStatus = "HK: \(Int(a))+\(Int(b))=\(burnedCalories)"
         
         defaults?.set(burnedCalories, forKey: "watchBurned")
         updateComplication()
@@ -142,7 +152,11 @@ extension WatchDataManager: WCSessionDelegate {
             if let consumed = message["consumed"] as? Int {
                 consumedCalories = consumed
             }
-            // Don't accept burned from phone - watch uses its own HealthKit
+            if let burned = message["burned"] as? Int, burned > 0 {
+                burnedCalories = burned
+                defaults?.set(burned, forKey: "watchBurned")
+                authStatus = "Phone: \(burned)"
+            }
             if let foodsData = message["foods"] as? [[String: Any]] {
                 foods = foodsData.compactMap { WatchFood(dict: $0) }
             }

@@ -21,6 +21,11 @@ struct ContentView: View {
                                 .foregroundColor(.blue)
                         }
                         .font(.caption2)
+                        if !dataManager.authStatus.isEmpty {
+                            Text(dataManager.authStatus)
+                                .font(.caption2)
+                                .foregroundColor(.gray)
+                        }
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
