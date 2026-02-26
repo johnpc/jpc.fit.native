@@ -37,11 +37,19 @@ struct CaloriesWidgetView: View {
     var entry: CaloriesEntry
     @Environment(\.widgetFamily) var family
     
+    private func format(_ n: Int) -> String {
+        let abs = abs(n)
+        if abs >= 1000 {
+            return String(format: "%.1fk", Double(abs) / 1000)
+        }
+        return "\(abs)"
+    }
+    
     var body: some View {
         switch family {
         case .accessoryCircular:
             VStack(spacing: 0) {
-                Text("\(entry.remaining)")
+                Text(format(entry.remaining))
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(entry.remaining >= 0 ? .green : .red)
                 Text("cal")
@@ -49,26 +57,27 @@ struct CaloriesWidgetView: View {
             }
         case .accessoryRectangular:
             VStack(alignment: .leading, spacing: 2) {
-                Text("\(entry.remaining) cal")
+                Text("\(format(entry.remaining)) cal")
                     .font(.headline)
                     .foregroundColor(entry.remaining >= 0 ? .green : .red)
                 HStack {
-                    Label("\(entry.burned)", systemImage: "flame.fill")
-                    Label("\(entry.consumed)", systemImage: "fork.knife")
+                    Text("🔥\(format(entry.burned))")
+                    Text("🍽️\(format(entry.consumed))")
                 }
                 .font(.caption2)
             }
         case .accessoryCorner:
-            Text("\(entry.remaining)")
-                .font(.system(size: 20, weight: .bold))
+            Text(format(entry.remaining))
+                .font(.system(size: 16, weight: .bold))
                 .foregroundColor(entry.remaining >= 0 ? .green : .red)
+                .widgetCurvesContent()
                 .widgetLabel {
                     Text("cal")
                 }
         case .accessoryInline:
-            Text("\(entry.remaining) cal remaining")
+            Text("\(format(entry.remaining)) cal left")
         default:
-            Text("\(entry.remaining)")
+            Text(format(entry.remaining))
         }
     }
 }

@@ -26,6 +26,9 @@ struct ContentView: View {
                                 .font(.caption2)
                                 .foregroundColor(.gray)
                         }
+                        Text(dataManager.connectionStatus)
+                            .font(.caption2)
+                            .foregroundColor(.gray)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
@@ -68,11 +71,18 @@ struct ContentView: View {
                 }
             }
             .navigationTitle("jpc.fit")
-            .refreshable {
-                await dataManager.refresh()
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        Task { await dataManager.refresh() }
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                }
             }
         }
         .task {
+            await dataManager.requestHealthKitAuth()
             await dataManager.refresh()
         }
     }

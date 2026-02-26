@@ -9,6 +9,7 @@ class WatchDataManager: NSObject, ObservableObject {
     static let shared = WatchDataManager()
     
     @Published var authStatus: String = ""
+    @Published var connectionStatus: String = "..."
     @Published var foods: [WatchFood] = []
     @Published var userQuickAdds: [WatchQuickAdd] = []
     @Published var consumedCalories: Int = 0
@@ -53,11 +54,16 @@ class WatchDataManager: NSObject, ObservableObject {
     func refresh() async {
         isLoading = true
         
-        // Request data from phone
+        // Query HealthKit directly on watch
+        await fetchHealthKitData()
+        
+        // Also request food data from phone
         if let session, session.activationState == .activated {
-            session.transferUserInfo(["action": "requestData"])
+            connectionStatus = session.isReachable ? "📱 Reachable" : "📱 Not reachable"
             if session.isReachable {
                 session.sendMessage(["action": "requestData"], replyHandler: nil, errorHandler: nil)
+            } else {
+                session.transferUserInfo(["action": "requestData"])
             }
         }
         isLoading = false

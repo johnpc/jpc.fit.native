@@ -4,14 +4,29 @@ import Amplify
 actor APIService {
     static let shared = APIService()
     
+    private func signOutIfUnauthorized(_ error: Error?) async {
+        guard let error, "\(error)".contains("Unauthorized") || "\(error)".contains("401") else { return }
+        _ = await Amplify.Auth.signOut()
+    }
+    
     func fetchFoods(day: String) async -> [Food] {
         let req = GraphQLRequest<JSONValue>(
             document: "query($day:String!){listFoodByDay(day:$day){items{id name calories protein day createdAt}}}",
             variables: ["day": day], responseType: JSONValue.self)
-        guard case .success(let data) = try? await Amplify.API.query(request: req),
-              let items = data.value(at: "listFoodByDay.items"),
-              case .array(let arr) = items else { return [] }
-        return arr.compactMap { parseFood($0) }.sorted { ($0.createdAt?.iso8601String ?? "") < ($1.createdAt?.iso8601String ?? "") }
+        do {
+            let result = try await Amplify.API.query(request: req)
+            if case .success(let data) = result,
+               let items = data.value(at: "listFoodByDay.items"),
+               case .array(let arr) = items {
+                return arr.compactMap { parseFood($0) }.sorted { ($0.createdAt?.iso8601String ?? "") < ($1.createdAt?.iso8601String ?? "") }
+            }
+            if case .failure(let gqlError) = result {
+                await signOutIfUnauthorized(gqlError)
+            }
+        } catch {
+            await signOutIfUnauthorized(error)
+        }
+        return []
     }
     
     func fetchHealthKitCache(day: String) async -> HealthKitCache? {
