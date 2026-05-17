@@ -236,7 +236,7 @@ jobs:
 
           OUTPUT=$(upload) && echo "$OUTPUT" && exit 0
 
-          if echo "$OUTPUT" | grep -qi "version.*already exists\|already been uploaded\|redundant binary"; then
+          if echo "$OUTPUT" | grep -qi "version.*already exists\|already been uploaded\|redundant binary\|train.*closed\|higher version"; then
             echo "⚠️ Version conflict detected, bumping minor version..."
             CURRENT=$(agvtool what-marketing-version -terse1)
             MAJOR=$(echo "$CURRENT" | cut -d. -f1)
