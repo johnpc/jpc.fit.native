@@ -73,9 +73,14 @@ jobs:
           total_lines = 0
           covered_lines = 0
           for target in data.get('targets', []):
-              if 'Tests' in target.get('name', '') or 'UITests' in target.get('name', ''):
+              tname = target.get('name', '')
+              if 'Tests' in tname or 'UITests' in tname:
                   continue
-              if 'jpc.fit.native' in target.get('name', '') and 'watch' not in target.get('name', '').lower() and 'widget' not in target.get('name', '').lower():
+              if 'watch' in tname.lower() or 'widget' in tname.lower():
+                  continue
+              # Match the main app target (could be jpc.fit.native, jpc.fit.app, or jpc.fit)
+              if 'jpc.fit' in tname or 'jpc_fit' in tname:
+                  print(f"Measuring target: {tname}")
                   for f in target.get('files', []):
                       fname = f.get('path', '').split('/')[-1]
                       if fname in view_files:
@@ -120,7 +125,7 @@ jobs:
           for target in data.get('targets', []):
               for file in target.get('files', []):
                   path = file.get('path', '')
-                  if '/jpc.fit.native/jpc.fit.native/' not in path:
+                  if '/jpc.fit.native/' not in path and '/jpc.fit/' not in path:
                       continue
                   if 'Tests/' in path or 'DerivedData' in path or 'SourcePackages' in path:
                       continue
