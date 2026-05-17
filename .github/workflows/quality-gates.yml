@@ -238,11 +238,11 @@ jobs:
 
           if echo "$OUTPUT" | grep -qi "version.*already exists\|already been uploaded\|redundant binary\|train.*closed\|higher version"; then
             echo "⚠️ Version conflict detected, bumping minor version..."
-            CURRENT=$(agvtool what-marketing-version -terse1)
+            CURRENT=$(grep 'MARKETING_VERSION' jpc.fit.native.xcodeproj/project.pbxproj | head -1 | sed 's/.*= *\(.*\);/\1/')
             MAJOR=$(echo "$CURRENT" | cut -d. -f1)
             MINOR=$(echo "$CURRENT" | cut -d. -f2)
             NEW_VERSION="${MAJOR}.$((MINOR + 1))"
-            agvtool new-marketing-version "$NEW_VERSION"
+            sed -i '' "s/MARKETING_VERSION = ${CURRENT}/MARKETING_VERSION = ${NEW_VERSION}/g" jpc.fit.native.xcodeproj/project.pbxproj
             echo "Bumped $CURRENT → $NEW_VERSION"
 
             git config user.name "github-actions[bot]"
