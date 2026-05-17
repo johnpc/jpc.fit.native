@@ -1,0 +1,21 @@
+arguments:
+- test
+- -scheme
+- jpc.fit.native
+- -destination
+- platform=iOS Simulator,name=iPhone 17 Pro
+- -only-testing:jpc.fit.nativeTests
+- -quiet
+executable: /usr/bin/xcodebuild
+exclude:
+- .build
+- build
+- DerivedData
+- SourcePackages
+- checkouts
+- jpc.fit.nativeTests
+- jpc.fit.nativeUITests
+- AmplifyModels
+- com.johncorser.fit.watchkitapp
+- jpc.fit.widget
+excludeCalls: []

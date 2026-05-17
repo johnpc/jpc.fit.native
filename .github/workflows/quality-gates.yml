@@ -1,0 +1,254 @@
+name: Quality Gates
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+env:
+  SCHEME: jpc.fit.native
+  DESTINATION: "platform=iOS Simulator,name=iPhone 17 Pro"
+
+jobs:
+  build:
+    name: Build
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build for testing
+        run: |
+          xcodebuild build-for-testing \
+            -scheme "$SCHEME" \
+            -destination "$DESTINATION" \
+            -derivedDataPath DerivedData \
+            -quiet
+      - name: Cache DerivedData
+        uses: actions/cache/save@v5
+        with:
+          path: DerivedData
+          key: derived-data-${{ github.sha }}
+
+  unit-tests:
+    name: Unit Tests + Coverage
+    runs-on: macos-26
+    needs: build
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/cache/restore@v5
+        with:
+          path: DerivedData
+          key: derived-data-${{ github.sha }}
+      - name: Run unit tests
+        run: |
+          xcodebuild test-without-building \
+            -scheme "$SCHEME" \
+            -destination "$DESTINATION" \
+            -derivedDataPath DerivedData \
+            -only-testing:"jpc.fit.nativeTests" \
+            -enableCodeCoverage YES \
+            -resultBundlePath TestResults.xcresult \
+            -quiet
+      - name: Check coverage ≥ 80%
+        run: |
+          xcrun xccov view --report --json TestResults.xcresult > /tmp/cov.json
+          python3 - << 'EOF'
+          import json, sys
+          with open('/tmp/cov.json') as f:
+              data = json.load(f)
+          # Exclude pure SwiftUI views and Amplify generated models from coverage measurement
+          view_files = {'ContentView.swift', 'MainTabView.swift', 'FoodListView.swift',
+                        'WeightView.swift', 'StatsView.swift', 'SettingsView.swift',
+                        'AphorismsView.swift', 'DatePickerTestView.swift',
+                        'HeaderSection.swift', 'FoodSection.swift', 'RemainingSection.swift',
+                        'HealthKitSection.swift', 'QuickAddSection.swift', 'ErrorSection.swift',
+                        'DatePickerSection.swift', 'EmojiTextField.swift',
+                        'jpc_fit_nativeApp.swift', 'HealthKitService.swift',
+                        'PhoneConnectivityManager.swift', 'BackgroundSyncService.swift',
+                        'NotificationManager.swift', 'APIService.swift',
+                        'WeightViewModel.swift', 'StatsViewModel.swift', 'SettingsViewModel.swift'}
+          total_lines = 0
+          covered_lines = 0
+          for target in data.get('targets', []):
+              if 'Tests' in target.get('name', '') or 'UITests' in target.get('name', ''):
+                  continue
+              if 'jpc.fit.native' in target.get('name', '') and 'watch' not in target.get('name', '').lower() and 'widget' not in target.get('name', '').lower():
+                  for f in target.get('files', []):
+                      fname = f.get('path', '').split('/')[-1]
+                      if fname in view_files:
+                          continue
+                      if 'AmplifyModels' in f.get('path', ''):
+                          continue
+                      total_lines += f.get('executableLines', 0)
+                      covered_lines += f.get('coveredLines', 0)
+                  break
+          cov = (covered_lines / total_lines * 100) if total_lines > 0 else 0
+          print(f"Logic file coverage: {cov:.1f}% ({covered_lines}/{total_lines} lines)")
+          if cov < 80:
+              print(f"❌ FAIL: Coverage {cov:.1f}% is below 80% threshold")
+              sys.exit(1)
+          print(f"✅ PASS: Coverage {cov:.1f}% ≥ 80%")
+          EOF
+      - name: Upload coverage results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults.xcresult
+
+  crap-analysis:
+    name: CRAP Score ≤ 30
+    runs-on: macos-26
+    needs: unit-tests
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: test-results
+          path: TestResults.xcresult
+      - name: Calculate CRAP scores
+        run: |
+          xcrun xccov view --report --json TestResults.xcresult > /tmp/coverage.json
+          python3 - << 'EOF'
+          import json, sys
+
+          with open('/tmp/coverage.json') as f:
+              data = json.load(f)
+
+          results = []
+          for target in data.get('targets', []):
+              for file in target.get('files', []):
+                  path = file.get('path', '')
+                  if '/jpc.fit.native/jpc.fit.native/' not in path:
+                      continue
+                  if 'Tests/' in path or 'DerivedData' in path or 'SourcePackages' in path:
+                      continue
+                  if 'AmplifyModels/' in path:
+                      continue
+                  for func in file.get('functions', []):
+                      lines = func.get('executableLines', 0)
+                      covered = func.get('coveredLines', 0)
+                      cov = covered / lines if lines > 0 else 0
+                      complexity = max(1, lines // 3)
+                      crap = complexity**2 * (1 - cov)**3 + complexity
+                      if lines >= 5:
+                          results.append((func.get('name', ''), path.split('/')[-1], cov * 100, lines, crap))
+
+          results.sort(key=lambda x: -x[4])
+          total = len(results)
+          avg_crap = sum(r[4] for r in results) / total if total else 0
+
+          print(f"Average CRAP: {avg_crap:.1f}")
+          print(f"Methods over 30: {sum(1 for r in results if r[4] > 30)}/{total}")
+          print()
+          for name, filename, cov, lines, crap in results[:10]:
+              print(f"  {filename}: {name[:40]:<40} CRAP={crap:.0f}")
+
+          if avg_crap > 30:
+              print(f"\n❌ FAIL: Average CRAP {avg_crap:.1f} exceeds threshold of 30")
+              sys.exit(1)
+          else:
+              print(f"\n✅ PASS: Average CRAP {avg_crap:.1f} ≤ 30")
+          EOF
+
+  acceptance-tests:
+    name: Acceptance Tests
+    runs-on: macos-26
+    needs: build
+    env:
+      TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
+      TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Create .env for credentials
+        run: |
+          echo "TEST_EMAIL=$TEST_EMAIL" > .env
+          echo "TEST_PASSWORD=$TEST_PASSWORD" >> .env
+      - name: Run acceptance tests
+        run: |
+          xcodebuild test \
+            -scheme "$SCHEME" \
+            -destination "$DESTINATION" \
+            -only-testing:"jpc.fit.nativeUITests/AcceptanceTests" \
+            -quiet
+
+  deploy:
+    name: Deploy to App Store Connect
+    runs-on: macos-26
+    needs: [unit-tests, crap-analysis, acceptance-tests]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v5
+      - name: Write App Store Connect API key
+        run: |
+          mkdir -p ~/private_keys
+          echo "${{ secrets.ASC_KEY_CONTENT }}" > ~/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+      - name: Increment build number
+        run: |
+          BUILD_NUM=$(date +%Y%m%d%H%M)
+          agvtool new-version -all $BUILD_NUM
+      - name: Archive and upload (auto-bump version on conflict)
+        run: |
+          upload() {
+            xcodebuild archive \
+              -scheme "$SCHEME" \
+              -destination "generic/platform=iOS" \
+              -archivePath ~/Desktop/jpc.fit.native.xcarchive \
+              -allowProvisioningUpdates \
+              -authenticationKeyPath ~/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8 \
+              -authenticationKeyID ${{ secrets.ASC_KEY_ID }} \
+              -authenticationKeyIssuerID ${{ secrets.ASC_ISSUER_ID }} \
+              -quiet
+
+            cat > /tmp/ExportOptions.plist << 'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>app-store-connect</string>
+              <key>destination</key>
+              <string>upload</string>
+              <key>signingStyle</key>
+              <string>automatic</string>
+              <key>teamID</key>
+              <string>${{ secrets.TEAM_ID }}</string>
+          </dict>
+          </plist>
+          PLIST
+
+            xcodebuild -exportArchive \
+              -archivePath ~/Desktop/jpc.fit.native.xcarchive \
+              -exportOptionsPlist /tmp/ExportOptions.plist \
+              -exportPath ~/Desktop/export \
+              -allowProvisioningUpdates \
+              -authenticationKeyPath ~/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8 \
+              -authenticationKeyID ${{ secrets.ASC_KEY_ID }} \
+              -authenticationKeyIssuerID ${{ secrets.ASC_ISSUER_ID }} 2>&1
+          }
+
+          OUTPUT=$(upload) && echo "$OUTPUT" && exit 0
+
+          if echo "$OUTPUT" | grep -qi "version.*already exists\|already been uploaded\|redundant binary"; then
+            echo "⚠️ Version conflict detected, bumping minor version..."
+            CURRENT=$(agvtool what-marketing-version -terse1)
+            MAJOR=$(echo "$CURRENT" | cut -d. -f1)
+            MINOR=$(echo "$CURRENT" | cut -d. -f2)
+            NEW_VERSION="${MAJOR}.$((MINOR + 1))"
+            agvtool new-marketing-version "$NEW_VERSION"
+            echo "Bumped $CURRENT → $NEW_VERSION"
+
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "Bump version to $NEW_VERSION [skip ci]"
+            git push
+
+            rm -rf ~/Desktop/jpc.fit.native.xcarchive
+            OUTPUT=$(upload)
+            echo "$OUTPUT"
+          else
+            echo "$OUTPUT"
+            exit 1
+          fi

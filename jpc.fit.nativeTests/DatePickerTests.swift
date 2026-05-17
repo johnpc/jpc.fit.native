@@ -1,6 +1,6 @@
 import XCTest
 import SwiftUI
-@testable import jpc_fit_native
+@testable import jpc_fit
 
 final class DatePickerTests: XCTestCase {
     

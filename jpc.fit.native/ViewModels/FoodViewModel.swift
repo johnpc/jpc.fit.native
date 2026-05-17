@@ -12,15 +12,22 @@ class FoodViewModel: ObservableObject {
     @Published var userQuickAdds: [QuickAddItem] = []
     @Published var isLoading = true
     @Published var errorMessage: String?
+    @Published var preferences: Preferences?
     
-    private let api = APIService.shared
+    private let api: APIServiceProtocol
     private let healthKit = HealthKitService.shared
+    
+    init(api: APIServiceProtocol = APIService.shared) {
+        self.api = api
+    }
     
     var totalCalories: Int { foods.reduce(0) { $0 + $1.calories } }
     var totalProtein: Int { foods.reduce(0) { $0 + ($1.protein ?? 0) } }
     var burnedCalories: Int { Int(healthKitCache?.activeCalories ?? 0) + Int(healthKitCache?.baseCalories ?? 0) }
     var remainingCalories: Int { burnedCalories - totalCalories }
     var quickAdds: [QuickAddItem] { userQuickAdds.isEmpty ? defaultQuickAdds : userQuickAdds }
+    var hideProtein: Bool { preferences?.hideProtein ?? false }
+    var hideSteps: Bool { preferences?.hideSteps ?? false }
     
     func requestHealthKitPermission() async {
         await healthKit.requestAuthorization()

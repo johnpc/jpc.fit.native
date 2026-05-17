@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		391B662F390F79489D8E081F /* jpc.fit.widget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CCFEBEC96E61FFE2E5E96FB1 /* jpc.fit.widget.appex */; };
+		95E5B73E6857D33EE6EA0958 /* ModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07FE64B438A617B1C0C531F9 /* ModelsTests.swift */; };
 		A615C5122F2962CB00F36993 /* Amplify in Frameworks */ = {isa = PBXBuildFile; productRef = AMPDEP01 /* Amplify */; };
 		A615C5132F2962CB00F36993 /* AWSCognitoAuthPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = AMPDEP02 /* AWSCognitoAuthPlugin */; };
 		A615C5142F2962CB00F36993 /* AWSAPIPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = AMPDEP03 /* AWSAPIPlugin */; };
@@ -16,14 +17,27 @@
 		A615C9112F2BFDBC00F36993 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A615C9102F2BFDBC00F36993 /* SwiftUI.framework */; };
 		A615C9202F2BFDBD00F36993 /* com.johncorser.fit.watchkitappExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A615C90D2F2BFDBC00F36993 /* com.johncorser.fit.watchkitappExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		AE62A64FA675EE359B986EFC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B77EE78D417E47A7EDEB6BE /* Foundation.framework */; };
+		B72FF9A19C8BFA838D71BF05 /* ViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0F6FBB19F57D6D67F487411 /* ViewModelTests.swift */; };
+		B846FC9A4B12B3D4CD35EE07 /* MockAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D18B7D69AD673F467FD03CD /* MockAPIService.swift */; };
+		B9FD22748F626A9C1249E611 /* AcceptanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12074D4A6D8E2CA7664D087C /* AcceptanceTests.swift */; };
+		C18E52601B591FD6A96E246D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B77EE78D417E47A7EDEB6BE /* Foundation.framework */; };
 		C4DB7B17D4D77C5F0665036B /* CalorieWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 772AC2455E6E3EE4796E639D /* CalorieWidget.swift */; };
 		CCF9B98E3B39BE620A5A3CC9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B77EE78D417E47A7EDEB6BE /* Foundation.framework */; };
 		D03938E9BF8560870493DB56 /* DateNavigationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F97C19BEA3DB4EDD306A57 /* DateNavigationUITests.swift */; };
+		E81F97FF8676EAE88CE7C2CC /* FoodViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4194BE0467D6FD2DE973FBD /* FoodViewModelTests.swift */; };
 		ED5356B415C5C02A0951541A /* com.johncorser.fit.watchkitapp Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = A615C8202F2BF9D100F36993 /* com.johncorser.fit.watchkitapp Watch App.app */; };
+		FFA3F80EC025B7E08E07D721 /* DatePickerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54875060E0756520DDD8C091 /* DatePickerTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
 		15583AFA2CEF8136DB25E2FA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A6F519AD2F292AF4003875EA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A6F519B42F292AF4003875EA;
+			remoteInfo = jpc.fit.native;
+		};
+		45A12C3AD66F592318C7A78F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = A6F519AD2F292AF4003875EA /* Project object */;
 			proxyType = 1;
@@ -57,7 +71,7 @@
 		67B61D8B14EE2E5B1D86C33F /* Embed Watch Content */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = "Watch";
+			dstPath = Watch;
 			dstSubfolderSpec = 1;
 			files = (
 				ED5356B415C5C02A0951541A /* com.johncorser.fit.watchkitapp Watch App.app in Embed Watch Content */,
@@ -90,8 +104,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		07FE64B438A617B1C0C531F9 /* ModelsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ModelsTests.swift; sourceTree = "<group>"; };
+		12074D4A6D8E2CA7664D087C /* AcceptanceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AcceptanceTests.swift; sourceTree = "<group>"; };
 		3B77EE78D417E47A7EDEB6BE /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		407C94A290F3969B7142C63C /* jpc.fit.nativeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = jpc.fit.nativeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		54875060E0756520DDD8C091 /* DatePickerTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DatePickerTests.swift; sourceTree = "<group>"; };
+		6D18B7D69AD673F467FD03CD /* MockAPIService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MockAPIService.swift; sourceTree = "<group>"; };
 		772AC2455E6E3EE4796E639D /* CalorieWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CalorieWidget.swift; sourceTree = "<group>"; };
 		A615C8202F2BF9D100F36993 /* com.johncorser.fit.watchkitapp Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "com.johncorser.fit.watchkitapp Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A615C90D2F2BFDBC00F36993 /* com.johncorser.fit.watchkitappExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = com.johncorser.fit.watchkitappExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -99,7 +117,10 @@
 		A615C9102F2BFDBC00F36993 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		A6F519B52F292AF4003875EA /* jpc.fit.native.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = jpc.fit.native.app; path = jpc.fit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A7F97C19BEA3DB4EDD306A57 /* DateNavigationUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DateNavigationUITests.swift; sourceTree = "<group>"; };
+		B0F6FBB19F57D6D67F487411 /* ViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ViewModelTests.swift; sourceTree = "<group>"; };
 		CCFEBEC96E61FFE2E5E96FB1 /* jpc.fit.widget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = jpc.fit.widget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		F4194BE0467D6FD2DE973FBD /* FoodViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FoodViewModelTests.swift; sourceTree = "<group>"; };
+		F66BD876D981F3FB810AD5AD /* jpc.fit.nativeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = jpc.fit.nativeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -181,9 +202,26 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C1D4415D374E06391D999267 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C18E52601B591FD6A96E246D /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		262AA76D9EC6E3E8B5CD507B /* Mocks */ = {
+			isa = PBXGroup;
+			children = (
+				6D18B7D69AD673F467FD03CD /* MockAPIService.swift */,
+			);
+			name = Mocks;
+			path = Mocks;
+			sourceTree = "<group>";
+		};
 		331D11C718DFDD150B7CEAA2 /* iOS */ = {
 			isa = PBXGroup;
 			children = (
@@ -220,6 +258,7 @@
 				810952CB964BBC37FBEB9B9B /* Frameworks */,
 				F803BBE417142F6C427A9199 /* jpc.fit.nativeUITests */,
 				9CA6F0C5AC32A9010E653AD7 /* jpc.fit.widget */,
+				D8C5A64BF8FD982BF148F75A /* jpc.fit.nativeTests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -231,14 +270,29 @@
 				CCFEBEC96E61FFE2E5E96FB1 /* jpc.fit.widget.appex */,
 				A615C8202F2BF9D100F36993 /* com.johncorser.fit.watchkitapp Watch App.app */,
 				A615C90D2F2BFDBC00F36993 /* com.johncorser.fit.watchkitappExtension.appex */,
+				F66BD876D981F3FB810AD5AD /* jpc.fit.nativeTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		D8C5A64BF8FD982BF148F75A /* jpc.fit.nativeTests */ = {
+			isa = PBXGroup;
+			children = (
+				262AA76D9EC6E3E8B5CD507B /* Mocks */,
+				F4194BE0467D6FD2DE973FBD /* FoodViewModelTests.swift */,
+				07FE64B438A617B1C0C531F9 /* ModelsTests.swift */,
+				54875060E0756520DDD8C091 /* DatePickerTests.swift */,
+				B0F6FBB19F57D6D67F487411 /* ViewModelTests.swift */,
+			);
+			name = jpc.fit.nativeTests;
+			path = jpc.fit.nativeTests;
 			sourceTree = "<group>";
 		};
 		F803BBE417142F6C427A9199 /* jpc.fit.nativeUITests */ = {
 			isa = PBXGroup;
 			children = (
 				A7F97C19BEA3DB4EDD306A57 /* DateNavigationUITests.swift */,
+				12074D4A6D8E2CA7664D087C /* AcceptanceTests.swift */,
 			);
 			path = jpc.fit.nativeUITests;
 			sourceTree = "<group>";
@@ -280,6 +334,24 @@
 			productName = jpc.fit.widget;
 			productReference = CCFEBEC96E61FFE2E5E96FB1 /* jpc.fit.widget.appex */;
 			productType = "com.apple.product-type.app-extension";
+		};
+		8676B4869FCD5CDE05D6403F /* jpc.fit.nativeTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 13664272D70A2A5EC16F5939 /* Build configuration list for PBXNativeTarget "jpc.fit.nativeTests" */;
+			buildPhases = (
+				5BE6436DD86089486B9EEAD0 /* Sources */,
+				C1D4415D374E06391D999267 /* Frameworks */,
+				589A2874FEAE7366EA7018EB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3572447383634F76D702ED0F /* PBXTargetDependency */,
+			);
+			name = jpc.fit.nativeTests;
+			productName = jpc.fit.nativeTests;
+			productReference = F66BD876D981F3FB810AD5AD /* jpc.fit.nativeTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		A615C81F2F2BF9D100F36993 /* com.johncorser.fit.watchkitapp Watch App */ = {
 			isa = PBXNativeTarget;
@@ -397,12 +469,20 @@
 				5CDDE555BD289B4A41037A9A /* jpc.fit.widget */,
 				A615C81F2F2BF9D100F36993 /* com.johncorser.fit.watchkitapp Watch App */,
 				A615C90C2F2BFDBC00F36993 /* com.johncorser.fit.watchkitappExtension */,
+				8676B4869FCD5CDE05D6403F /* jpc.fit.nativeTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		38913677711956C9964F7745 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		589A2874FEAE7366EA7018EB /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -440,11 +520,24 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		5BE6436DD86089486B9EEAD0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E81F97FF8676EAE88CE7C2CC /* FoodViewModelTests.swift in Sources */,
+				95E5B73E6857D33EE6EA0958 /* ModelsTests.swift in Sources */,
+				FFA3F80EC025B7E08E07D721 /* DatePickerTests.swift in Sources */,
+				B846FC9A4B12B3D4CD35EE07 /* MockAPIService.swift in Sources */,
+				B72FF9A19C8BFA838D71BF05 /* ViewModelTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		685C7902DF3D925852398242 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				D03938E9BF8560870493DB56 /* DateNavigationUITests.swift in Sources */,
+				B9FD22748F626A9C1249E611 /* AcceptanceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -485,6 +578,12 @@
 			name = "com.johncorser.fit.watchkitapp Watch App";
 			target = A615C81F2F2BF9D100F36993 /* com.johncorser.fit.watchkitapp Watch App */;
 			targetProxy = A19F8D3B6D8DE20470B8649A /* PBXContainerItemProxy */;
+		};
+		3572447383634F76D702ED0F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = jpc.fit.native;
+			target = A6F519B42F292AF4003875EA /* jpc.fit.native */;
+			targetProxy = 45A12C3AD66F592318C7A78F /* PBXContainerItemProxy */;
 		};
 		58A5920358DA56001D77BF8C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -534,6 +633,41 @@
 				SWIFT_VERSION = 5.0;
 				VALIDATE_PRODUCT = YES;
 				WRAPPER_EXTENSION = appex;
+			};
+			name = Release;
+		};
+		137DC406054C32DCC6E8AE68 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = JW5SC3NYUV;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.johncorser.fit.nativeTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/jpc.fit.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/jpc.fit";
+			};
+			name = Debug;
+		};
+		1F3B20D42C9A413EE3D3607E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = JW5SC3NYUV;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.johncorser.fit.nativeTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/jpc.fit.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/jpc.fit";
+				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
 		};
@@ -589,8 +723,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
 				CODE_SIGN_ENTITLEMENTS = "com.johncorser.fit.watchkitapp Watch App/com.johncorser.fit.watchkitapp Watch App.entitlements";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = JW5SC3NYUV;
 				ENABLE_PREVIEWS = YES;
@@ -625,8 +759,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
 				CODE_SIGN_ENTITLEMENTS = "com.johncorser.fit.watchkitapp Watch App/com.johncorser.fit.watchkitapp Watch App.entitlements";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = JW5SC3NYUV;
 				ENABLE_PREVIEWS = YES;
@@ -661,9 +795,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
-				CODE_SIGN_STYLE = Automatic;
-				CODE_SIGN_STYLE = Automatic;
 				CODE_SIGN_ENTITLEMENTS = com.johncorser.fit.watchkitapp/com.johncorser.fit.watchkitapp.entitlements;
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = JW5SC3NYUV;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -696,8 +829,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
-				CODE_SIGN_STYLE = Automatic;
 				CODE_SIGN_ENTITLEMENTS = com.johncorser.fit.watchkitapp/com.johncorser.fit.watchkitapp.entitlements;
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = JW5SC3NYUV;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -858,8 +991,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_BGTaskSchedulerPermittedIdentifiers = "$(PRODUCT_BUNDLE_IDENTIFIER).healthkitsync";
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "This app reads your health data to display calories burned and steps.";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "This app reads your health data to display calories burned and steps.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "This app does not write health data.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -893,8 +1026,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_BGTaskSchedulerPermittedIdentifiers = "$(PRODUCT_BUNDLE_IDENTIFIER).healthkitsync";
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "This app reads your health data to display calories burned and steps.";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "This app reads your health data to display calories burned and steps.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "This app does not write health data.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -935,6 +1068,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		13664272D70A2A5EC16F5939 /* Build configuration list for PBXNativeTarget "jpc.fit.nativeTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1F3B20D42C9A413EE3D3607E /* Release */,
+				137DC406054C32DCC6E8AE68 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		9892FAB922163F7484691A24 /* Build configuration list for PBXNativeTarget "jpc.fit.widget" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
