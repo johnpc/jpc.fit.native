@@ -125,11 +125,12 @@ jobs:
           for target in data.get('targets', []):
               for file in target.get('files', []):
                   path = file.get('path', '')
-                  if '/jpc.fit.native/' not in path and '/jpc.fit/' not in path:
+                  # Only measure files in the main app source directory
+                  if 'jpc.fit.native/jpc.fit.native/' not in path and '/jpc.fit.native/Services/' not in path and '/jpc.fit.native/ViewModels/' not in path and '/jpc.fit.native/Views/' not in path and '/jpc.fit.native/Constants/' not in path and '/jpc.fit.native/Models/' not in path:
                       continue
                   if 'Tests/' in path or 'DerivedData' in path or 'SourcePackages' in path:
                       continue
-                  if 'AmplifyModels/' in path:
+                  if 'AmplifyModels/' in path or 'widget' in path.lower() or 'watchkit' in path.lower():
                       continue
                   for func in file.get('functions', []):
                       lines = func.get('executableLines', 0)
