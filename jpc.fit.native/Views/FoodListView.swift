@@ -95,7 +95,8 @@ struct FoodListView: View {
     private func addCustomFood() {
         if let cal = Int(newFoodCalories), cal > 0 {
             let name = "🍽️ \(newFoodName.isEmpty ? "Food" : newFoodName)"
-            Task { await vm.addFood(name: name, calories: cal, protein: Int(newFoodProtein), day: dayString) }
+            let protein = Int(newFoodProtein)
+            Task { await vm.addFood(name: name, calories: cal, protein: protein, day: dayString) }
         }
         clearForm()
     }
@@ -106,7 +107,9 @@ struct FoodListView: View {
 
     private func updateFood(_ food: Food) {
         guard let cal = Int(newFoodCalories), cal > 0 else { clearForm(); return }
-        Task { await vm.updateFood(id: food.id, name: newFoodName.isEmpty ? nil : newFoodName, calories: cal, protein: Int(newFoodProtein), day: dayString) }
+        let protein = Int(newFoodProtein)
+        let name = newFoodName.isEmpty ? nil : newFoodName
+        Task { await vm.updateFood(id: food.id, name: name, calories: cal, protein: protein, day: dayString) }
         clearForm()
     }
 
