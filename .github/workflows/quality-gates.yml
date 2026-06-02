@@ -201,6 +201,7 @@ jobs:
               -scheme "$SCHEME" \
               -destination "generic/platform=iOS" \
               -archivePath ~/Desktop/jpc.fit.native.xcarchive \
+              CODE_SIGN_IDENTITY="Apple Distribution" \
               -allowProvisioningUpdates \
               -authenticationKeyPath ~/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8 \
               -authenticationKeyID ${{ secrets.ASC_KEY_ID }} \
