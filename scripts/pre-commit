@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# jpc.fit.native pre-commit hook: line limit -> gherkin sync -> unit tests -> build.
+# Install with: bash scripts/install-hooks.sh
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+SCHEME="jpc.fit.native"
+DESTINATION="platform=iOS Simulator,name=iPhone 17 Pro"
+
+echo "▶ [1/4] Source file line limit"
+bash scripts/check_line_limit.sh
+
+echo "▶ [2/4] Acceptance tests in sync with .feature files"
+python3 scripts/generate_acceptance_tests.py --check
+
+echo "▶ [3/4] Unit tests"
+xcodebuild test \
+  -scheme "$SCHEME" \
+  -destination "$DESTINATION" \
+  -only-testing:"jpc.fit.nativeTests" \
+  -derivedDataPath DerivedData \
+  -quiet
+
+echo "▶ [4/4] Build app"
+xcodebuild build \
+  -scheme "$SCHEME" \
+  -destination "$DESTINATION" \
+  -derivedDataPath DerivedData \
+  -quiet
+
+echo "✅ Pre-commit checks passed"

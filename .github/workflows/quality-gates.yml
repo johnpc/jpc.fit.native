@@ -14,6 +14,16 @@ env:
   DESTINATION: "platform=iOS Simulator,name=iPhone 17 Pro"
 
 jobs:
+  lint:
+    name: Source Line Limit + Gherkin Sync
+    runs-on: macos-26-xlarge
+    steps:
+      - uses: actions/checkout@v5
+      - name: Source file line limit (≤100)
+        run: bash scripts/check_line_limit.sh
+      - name: Acceptance tests in sync with .feature files
+        run: python3 scripts/generate_acceptance_tests.py --check
+
   build:
     name: Build
     runs-on: macos-26-xlarge
@@ -54,49 +64,8 @@ jobs:
             -quiet
       - name: Check coverage ≥ 80%
         run: |
-          xcrun xccov view --report --json TestResults.xcresult > /tmp/cov.json
-          python3 - << 'EOF'
-          import json, sys
-          with open('/tmp/cov.json') as f:
-              data = json.load(f)
-          # Exclude pure SwiftUI views and Amplify generated models from coverage measurement
-          view_files = {'ContentView.swift', 'MainTabView.swift', 'FoodListView.swift',
-                        'WeightView.swift', 'StatsView.swift', 'SettingsView.swift',
-                        'AphorismsView.swift', 'DatePickerTestView.swift',
-                        'HeaderSection.swift', 'FoodSection.swift', 'RemainingSection.swift',
-                        'HealthKitSection.swift', 'QuickAddSection.swift', 'ErrorSection.swift',
-                        'DatePickerSection.swift', 'EmojiTextField.swift',
-                        'jpc_fit_nativeApp.swift', 'HealthKitService.swift',
-                        'PhoneConnectivityManager.swift', 'BackgroundSyncService.swift',
-                        'NotificationManager.swift', 'APIService.swift',
-                        'WeightViewModel.swift', 'StatsViewModel.swift', 'SettingsViewModel.swift'}
-          total_lines = 0
-          covered_lines = 0
-          for target in data.get('targets', []):
-              tname = target.get('name', '')
-              if 'Tests' in tname or 'UITests' in tname:
-                  continue
-              if 'watch' in tname.lower() or 'widget' in tname.lower():
-                  continue
-              # Match the main app target (could be jpc.fit.native, jpc.fit.app, or jpc.fit)
-              if 'jpc.fit' in tname or 'jpc_fit' in tname:
-                  print(f"Measuring target: {tname}")
-                  for f in target.get('files', []):
-                      fname = f.get('path', '').split('/')[-1]
-                      if fname in view_files:
-                          continue
-                      if 'AmplifyModels' in f.get('path', ''):
-                          continue
-                      total_lines += f.get('executableLines', 0)
-                      covered_lines += f.get('coveredLines', 0)
-                  break
-          cov = (covered_lines / total_lines * 100) if total_lines > 0 else 0
-          print(f"Logic file coverage: {cov:.1f}% ({covered_lines}/{total_lines} lines)")
-          if cov < 80:
-              print(f"❌ FAIL: Coverage {cov:.1f}% is below 80% threshold")
-              sys.exit(1)
-          print(f"✅ PASS: Coverage {cov:.1f}% ≥ 80%")
-          EOF
+          xcrun xccov view --report --json TestResults.xcresult > coverage.json
+          python3 scripts/coverage_check.py coverage.json
       - name: Upload coverage results
         uses: actions/upload-artifact@v4
         with:
@@ -108,71 +77,67 @@ jobs:
     runs-on: macos-26-xlarge
     needs: unit-tests
     steps:
+      - uses: actions/checkout@v5
       - uses: actions/download-artifact@v4
         with:
           name: test-results
           path: TestResults.xcresult
       - name: Calculate CRAP scores
         run: |
-          xcrun xccov view --report --json TestResults.xcresult > /tmp/coverage.json
-          python3 - << 'EOF'
-          import json, sys
-
-          with open('/tmp/coverage.json') as f:
-              data = json.load(f)
-
-          results = []
-          for target in data.get('targets', []):
-              for file in target.get('files', []):
-                  path = file.get('path', '')
-                  # Only measure files in the main app source directory
-                  if 'jpc.fit.native/jpc.fit.native/' not in path and '/jpc.fit.native/Services/' not in path and '/jpc.fit.native/ViewModels/' not in path and '/jpc.fit.native/Views/' not in path and '/jpc.fit.native/Constants/' not in path and '/jpc.fit.native/Models/' not in path:
-                      continue
-                  if 'Tests/' in path or 'DerivedData' in path or 'SourcePackages' in path:
-                      continue
-                  if 'AmplifyModels/' in path or 'widget' in path.lower() or 'watchkit' in path.lower():
-                      continue
-                  for func in file.get('functions', []):
-                      lines = func.get('executableLines', 0)
-                      covered = func.get('coveredLines', 0)
-                      cov = covered / lines if lines > 0 else 0
-                      complexity = max(1, lines // 3)
-                      crap = complexity**2 * (1 - cov)**3 + complexity
-                      if lines >= 5:
-                          results.append((func.get('name', ''), path.split('/')[-1], cov * 100, lines, crap))
-
-          results.sort(key=lambda x: -x[4])
-          total = len(results)
-          avg_crap = sum(r[4] for r in results) / total if total else 0
-
-          print(f"Average CRAP: {avg_crap:.1f}")
-          print(f"Methods over 30: {sum(1 for r in results if r[4] > 30)}/{total}")
-          print()
-          for name, filename, cov, lines, crap in results[:10]:
-              print(f"  {filename}: {name[:40]:<40} CRAP={crap:.0f}")
-
-          if avg_crap > 30:
-              print(f"\n❌ FAIL: Average CRAP {avg_crap:.1f} exceeds threshold of 30")
-              sys.exit(1)
-          else:
-              print(f"\n✅ PASS: Average CRAP {avg_crap:.1f} ≤ 30")
-          EOF
+          xcrun xccov view --report --json TestResults.xcresult > coverage.json
+          python3 scripts/crap_check.py coverage.json
 
   acceptance-tests:
-    name: Acceptance Tests
+    name: Acceptance Tests (Gherkin)
     runs-on: macos-26-xlarge
     needs: build
+    timeout-minutes: 40
     env:
       TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
       TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
     steps:
       - uses: actions/checkout@v5
-      - name: Create .env for credentials
+      - name: Verify generated acceptance tests match .feature files
+        run: python3 scripts/generate_acceptance_tests.py --check
+      - name: Run acceptance tests (retry failed, then full suite)
         run: |
-          echo "TEST_EMAIL=$TEST_EMAIL" > .env
-          echo "TEST_PASSWORD=$TEST_PASSWORD" >> .env
-      - name: Run acceptance tests
-        run: |
+          RESULT_PATH=/tmp/AcceptanceResults.xcresult
+          rm -rf "$RESULT_PATH"
+          xcodebuild test \
+            -scheme "$SCHEME" \
+            -destination "$DESTINATION" \
+            -only-testing:"jpc.fit.nativeUITests/AcceptanceTests" \
+            -resultBundlePath "$RESULT_PATH" \
+            -quiet && exit 0
+
+          echo "⚠️ Some tests failed, retrying only failed tests..."
+          FAILED=$(xcrun xcresulttool get test-results tests --path "$RESULT_PATH" 2>/dev/null \
+            | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          for node in data.get('testNodes', []):
+            for child in node.get('children', []):
+              for test in child.get('children', []):
+                if test.get('result') == 'Failed':
+                  print(f\"jpc.fit.nativeUITests/{child['name']}/{test['name']}\")
+          ")
+
+          if [ -n "$FAILED" ]; then
+            RETRY_ARGS=""
+            for t in $FAILED; do
+              echo "  Retrying: $t"
+              RETRY_ARGS="$RETRY_ARGS -only-testing:$t"
+            done
+            sleep 5
+            xcodebuild test \
+              -scheme "$SCHEME" \
+              -destination "$DESTINATION" \
+              $RETRY_ARGS \
+              -quiet && exit 0
+          fi
+
+          echo "⚠️ Targeted retry failed, retrying full suite..."
+          sleep 5
           xcodebuild test \
             -scheme "$SCHEME" \
             -destination "$DESTINATION" \

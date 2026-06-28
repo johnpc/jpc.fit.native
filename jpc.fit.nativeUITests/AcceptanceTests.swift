@@ -1,26 +1,84 @@
 import XCTest
 
+/// Acceptance runner. The **source of truth is the `.feature` files** under
+/// `jpc.fit.nativeUITests/Features/`. Each scenario maps to one concrete `test…`
+/// method in `AcceptanceTests.generated.swift` (regenerated from the features by
+/// `scripts/generate_acceptance_tests.py`). Every generated method delegates to
+/// `runScenario(feature:scenario:)` below, which parses that feature at runtime
+/// and executes its Given/When/Then steps against the definitions in
+/// `StepDefinitions.swift`.
+///
+/// Why generated concrete methods instead of a fully dynamic suite: XCTest's
+/// `-only-testing` filtering and crash-recovery both work by selector name, so
+/// real methods are required for CI's targeted retry and for clean crash
+/// recovery. The `.feature` files remain the only thing an author edits; the
+/// generated file is mechanical and kept in sync by a quality gate.
+///
+/// These are real end-to-end tests against the live backend: sign-in uses the
+/// `TEST_EMAIL` / `TEST_PASSWORD` credentials (read from the environment or a
+/// local `.env`), exposed to steps via `GherkinWorld`.
 final class AcceptanceTests: XCTestCase {
-    private var app: XCUIApplication!
-    private var testEmail: String!
-    private var testPassword: String!
 
-    override func setUpWithError() throws {
+    /// Parse the named bundled feature file, find the scenario, and run its steps.
+    func runScenario(feature fileName: String, scenario name: String,
+                     file: StaticString = #file, line: UInt = #line) throws {
         continueAfterFailure = false
-        app = XCUIApplication()
 
-        testEmail = ProcessInfo.processInfo.environment["TEST_EMAIL"] ?? loadEnv("TEST_EMAIL")
-        testPassword = ProcessInfo.processInfo.environment["TEST_PASSWORD"] ?? loadEnv("TEST_PASSWORD")
-
-        guard testEmail != nil, testPassword != nil else {
+        let email = ProcessInfo.processInfo.environment["TEST_EMAIL"] ?? Self.loadEnv("TEST_EMAIL")
+        let password = ProcessInfo.processInfo.environment["TEST_PASSWORD"] ?? Self.loadEnv("TEST_PASSWORD")
+        guard let email, let password else {
             throw XCTSkip("TEST_EMAIL and TEST_PASSWORD required for acceptance tests")
+        }
+
+        guard let scenario = Self.scenario(named: name, inFeature: fileName) else {
+            XCTFail("Scenario “\(name)” not found in \(fileName) — regenerate with scripts/generate_acceptance_tests.py",
+                    file: file, line: line)
+            return
+        }
+
+        let app = XCUIApplication()
+        app.launch()
+
+        let world = GherkinWorld(app: app)
+        world.email = email
+        world.password = password
+        let registry = StepDefinitions.makeRegistry()
+
+        for step in scenario.steps {
+            XCTContext.runActivity(named: "\(step.keyword) \(step.text)") { _ in
+                if registry.isAmbiguous(step.text) {
+                    XCTFail("Ambiguous step matches multiple definitions: “\(step.text)” (\(name):\(step.line))",
+                            file: file, line: line)
+                    return
+                }
+                guard let run = registry.match(step.text) else {
+                    XCTFail("Undefined step: “\(step.text)” — add a matching definition in StepDefinitions.swift (\(name):\(step.line))",
+                            file: file, line: line)
+                    return
+                }
+                run(world)
+            }
         }
     }
 
-    private func loadEnv(_ key: String) -> String? {
+    /// Locate and parse a scenario by name in a bundled `.feature` file. The file
+    /// may be bundled flattened at the root or under a "Features" subdirectory.
+    private static func scenario(named name: String, inFeature fileName: String) -> GherkinScenario? {
+        let bundle = Bundle(for: AcceptanceTests.self)
+        let resource = (fileName as NSString).deletingPathExtension
+        let url = bundle.url(forResource: resource, withExtension: "feature")
+            ?? bundle.url(forResource: resource, withExtension: "feature", subdirectory: "Features")
+        guard let url, let contents = try? String(contentsOf: url, encoding: .utf8),
+              let feature = GherkinParser.parse(contents) else { return nil }
+        return feature.scenarios.first { $0.name == name }
+    }
+
+    /// Read a key from a local `.env` file (used when the value isn't in the
+    /// process environment, e.g. running from Xcode rather than CI).
+    private static func loadEnv(_ key: String) -> String? {
         let paths = [
             ProcessInfo.processInfo.environment["PROJECT_DIR"].map { "\($0)/.env" },
-            "/Users/johnpc/repo/jpc.fit.native/.env",
+            FileManager.default.currentDirectoryPath + "/.env",
         ].compactMap { $0 }
 
         for envPath in paths {
@@ -28,107 +86,10 @@ final class AcceptanceTests: XCTestCase {
             for line in content.components(separatedBy: .newlines) {
                 let parts = line.split(separator: "=", maxSplits: 1)
                 if parts.count == 2, String(parts[0]) == key {
-                    return String(parts[1])
+                    return String(parts[1]).trimmingCharacters(in: .whitespaces)
                 }
             }
         }
         return nil
-    }
-
-    private func signIn() {
-        app.launch()
-
-        let emailField = app.textFields["Email"]
-        if emailField.waitForExistence(timeout: 10) {
-            emailField.tap()
-            emailField.typeText(testEmail)
-
-            let passwordField = app.secureTextFields["Password"]
-            passwordField.tap()
-            passwordField.typeText(testPassword)
-
-            app.buttons["Sign In"].firstMatch.tap()
-        } else if app.tabBars.firstMatch.waitForExistence(timeout: 5) {
-            return
-        }
-
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 20), "Tab bar should appear after login")
-    }
-
-    // MARK: - Feature: User Login
-
-    @MainActor
-    func testSuccessfulLogin() throws {
-        signIn()
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.exists)
-        XCTAssertTrue(tabBar.buttons.count >= 5, "Should have 5 tabs")
-    }
-
-    // MARK: - Feature: Calories Tab
-
-    @MainActor
-    func testCaloriesTabLoads() throws {
-        signIn()
-        app.tabBars.buttons["Calories"].tap()
-        // Should see date navigation and remaining calories
-        let hasContent = app.navigationBars.firstMatch.waitForExistence(timeout: 10)
-            || app.staticTexts.firstMatch.waitForExistence(timeout: 5)
-        XCTAssertTrue(hasContent, "Calories tab should show content")
-    }
-
-    // MARK: - Feature: Weight Tab
-
-    @MainActor
-    func testWeightTabLoads() throws {
-        signIn()
-        app.tabBars.buttons["Weight"].tap()
-        let loaded = app.staticTexts["Weight"].waitForExistence(timeout: 5)
-            || app.navigationBars["Weight"].waitForExistence(timeout: 2)
-            || app.collectionViews.firstMatch.waitForExistence(timeout: 5)
-        XCTAssertTrue(loaded, "Weight tab should load")
-    }
-
-    // MARK: - Feature: Stats Tab
-
-    @MainActor
-    func testStatsTabLoads() throws {
-        signIn()
-        app.tabBars.buttons["Stats"].tap()
-        let loaded = app.staticTexts["Stats"].waitForExistence(timeout: 5)
-            || app.navigationBars["Stats"].waitForExistence(timeout: 2)
-            || app.collectionViews.firstMatch.waitForExistence(timeout: 5)
-        XCTAssertTrue(loaded, "Stats tab should load")
-    }
-
-    // MARK: - Feature: Quotes Tab
-
-    @MainActor
-    func testQuotesTabLoads() throws {
-        signIn()
-        app.tabBars.buttons["Quotes"].tap()
-        let loaded = app.staticTexts.firstMatch.waitForExistence(timeout: 5)
-            || app.navigationBars.firstMatch.waitForExistence(timeout: 2)
-        XCTAssertTrue(loaded, "Quotes tab should load")
-    }
-
-    // MARK: - Feature: Settings Tab
-
-    @MainActor
-    func testSettingsTabLoads() throws {
-        signIn()
-        app.tabBars.buttons["Settings"].tap()
-        let loaded = app.staticTexts["Settings"].waitForExistence(timeout: 5)
-            || app.navigationBars["Settings"].waitForExistence(timeout: 2)
-        XCTAssertTrue(loaded, "Settings tab should load")
-    }
-
-    @MainActor
-    func testSettingsHasSignOut() throws {
-        signIn()
-        app.tabBars.buttons["Settings"].tap()
-        let signOut = app.buttons["Sign Out"].waitForExistence(timeout: 10)
-        XCTAssertTrue(signOut, "Settings should have Sign Out button")
     }
 }

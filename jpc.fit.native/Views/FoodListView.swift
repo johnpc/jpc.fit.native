@@ -10,7 +10,6 @@ struct FoodListView: View {
     @State private var newFoodName = ""
     @State private var newFoodCalories = ""
     @State private var newFoodProtein = ""
-    @FocusState private var nameFieldFocused: Bool
 
     private var dayString: String { selectedDate.formatted(date: .numeric, time: .omitted) }
 
@@ -27,7 +26,13 @@ struct FoodListView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .refreshable { await vm.fetchAll(day: dayString, date: selectedDate) }
-            .sheet(isPresented: $showingAddFood) { addFoodSheet }
+            .sheet(isPresented: $showingAddFood) {
+                FoodFormSheet(title: "Add Food", name: $newFoodName, calories: $newFoodCalories,
+                              protein: $newFoodProtein, hideProtein: vm.hideProtein, focusName: true,
+                              confirmLabel: "Add", confirmDisabled: newFoodCalories.isEmpty,
+                              onCancel: { showingAddFood = false; clearForm() },
+                              onConfirm: { addCustomFood(); showingAddFood = false })
+            }
             .sheet(item: $editingFood) { food in editFoodSheet(food) }
             .onChange(of: selectedDate) { _, _ in Task { await vm.fetchAll(day: dayString, date: selectedDate) } }
         }
@@ -56,36 +61,13 @@ struct FoodListView: View {
         }
     }
 
-    private var addFoodSheet: some View {
-        NavigationStack {
-            Form {
-                TextField("Name", text: $newFoodName).focused($nameFieldFocused).textInputAutocapitalization(.words)
-                TextField("Calories", text: $newFoodCalories).keyboardType(.numberPad)
-                if !vm.hideProtein { TextField("Protein (g)", text: $newFoodProtein).keyboardType(.numberPad) }
-            }
-            .navigationTitle("Add Food").navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { showingAddFood = false; clearForm() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Add") { addCustomFood(); showingAddFood = false }.disabled(newFoodCalories.isEmpty) }
-            }
-            .onAppear { nameFieldFocused = true }
-        }.presentationDetents([.medium])
-    }
-
     private func editFoodSheet(_ food: Food) -> some View {
-        NavigationStack {
-            Form {
-                TextField("Name", text: $newFoodName)
-                TextField("Calories", text: $newFoodCalories).keyboardType(.numberPad)
-                if !vm.hideProtein { TextField("Protein (g)", text: $newFoodProtein).keyboardType(.numberPad) }
-            }
-            .navigationTitle("Edit Food").navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { editingFood = nil; clearForm() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Save") { updateFood(food); editingFood = nil } }
-            }
+        FoodFormSheet(title: "Edit Food", name: $newFoodName, calories: $newFoodCalories,
+                      protein: $newFoodProtein, hideProtein: vm.hideProtein, focusName: false,
+                      confirmLabel: "Save", confirmDisabled: false,
+                      onCancel: { editingFood = nil; clearForm() },
+                      onConfirm: { updateFood(food); editingFood = nil })
             .onAppear { newFoodName = food.name ?? ""; newFoodCalories = "\(food.calories)"; newFoodProtein = food.protein.map { "\($0)" } ?? "" }
-        }.presentationDetents([.medium])
     }
 
     private func addQuickFood(_ qa: QuickAddItem) {

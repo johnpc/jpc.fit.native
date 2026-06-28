@@ -17,7 +17,7 @@ struct SettingsView: View {
     var body: some View {
         List {
             HeaderSection()
-            philosophySection
+            PhilosophySection()
             notificationsSection
             preferencesSection
             createQuickAddSection
@@ -36,34 +36,8 @@ struct SettingsView: View {
         .refreshable { await vm.fetchAll() }
     }
 
-    private var philosophySection: some View {
-        Section {
-            DisclosureGroup("Why T-Shirt Sizes?") {
-                Text("**The philosophy of jpc.fit is that mindful eating is more important than counting every calorie exactly perfectly.**").font(.callout).padding(.vertical, 4)
-                Text("In the USA, calorie labels can legally be wrong by up to 20%. Instead, we recommend loose estimation (and round up when it makes sense!)").font(.callout).padding(.vertical, 4)
-                Text("If this philosophy doesn't work for you, you can create custom quick adds for your most common meals.").font(.callout).padding(.vertical, 4)
-            }
-        }
-    }
-
     private var notificationsSection: some View {
-        Section("Daily Notifications") {
-            if notifications.isEnabled {
-                ForEach(Array(notifications.reminderTimes.enumerated()), id: \.offset) { i, time in
-                    HStack { Text(formatTime(time)); Spacer() }
-                        .swipeActions { Button("Delete", role: .destructive) { notifications.removeTime(at: i) } }
-                }
-                HStack {
-                    DatePicker("", selection: $newReminderTime, displayedComponents: .hourAndMinute).labelsHidden()
-                    Spacer()
-                    Button("Add") { notifications.addTime(newReminderTime) }.buttonStyle(.borderless)
-                }
-                Button("Re-schedule Notifications") { notifications.scheduleNotifications() }
-                Button("Disable Notifications", role: .destructive) { notifications.disable() }
-            } else {
-                Button("Enable Reminder Notifications") { Task { await notifications.requestPermission() } }
-            }
-        }
+        NotificationsSection(notifications: notifications, newReminderTime: $newReminderTime)
     }
 
     private var preferencesSection: some View {
@@ -80,22 +54,9 @@ struct SettingsView: View {
     }
 
     private var quickAddsListSection: some View {
-        Section("Your Quick Adds") {
-            if vm.quickAdds.isEmpty {
-                Text("No custom quick adds").foregroundStyle(.secondary)
-            } else {
-                ForEach(vm.quickAdds, id: \.id) { qa in
-                    Button { editingQuickAdd = qa } label: {
-                        HStack {
-                            Text(vm.iconDisplay(qa.icon)); Text(qa.name); Spacer()
-                            Text("\(qa.calories) cal").foregroundStyle(.secondary)
-                            if !vm.hideProtein, let p = qa.protein { Text("\(p)g").foregroundStyle(.secondary) }
-                        }
-                    }.foregroundStyle(.primary)
-                }
-                .onDelete(perform: vm.deleteQuickAdd)
-            }
-        }
+        QuickAddsListSection(quickAdds: vm.quickAdds, hideProtein: vm.hideProtein,
+                             iconDisplay: vm.iconDisplay, onEdit: { editingQuickAdd = $0 },
+                             onDelete: vm.deleteQuickAdd)
     }
 
     private var accountSection: some View {
@@ -106,46 +67,20 @@ struct SettingsView: View {
     }
 
     private var createQuickAddSheet: some View {
-        NavigationStack {
-            Form {
-                EmojiTextField(text: $newIcon, placeholder: "Icon (emoji)")
-                TextField("Name", text: $newName)
-                TextField("Calories", text: $newCalories).keyboardType(.numberPad)
-                if !vm.hideProtein { TextField("Protein (g)", text: $newProtein).keyboardType(.numberPad) }
-            }
-            .navigationTitle("New Quick Add").navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { showCreateQuickAdd = false; clearForm() } }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Create") { vm.createQuickAdd(name: newName, calories: newCalories, protein: newProtein, icon: newIcon); showCreateQuickAdd = false; clearForm() }
-                        .disabled(newName.trimmingCharacters(in: .whitespaces).isEmpty || Int(newCalories) == nil)
-                }
-            }
-        }.presentationDetents([.medium])
+        QuickAddFormSheet(title: "New Quick Add", icon: $newIcon, name: $newName, calories: $newCalories,
+                          protein: $newProtein, hideProtein: vm.hideProtein, confirmLabel: "Create",
+                          confirmDisabled: newName.trimmingCharacters(in: .whitespaces).isEmpty || Int(newCalories) == nil,
+                          onCancel: { showCreateQuickAdd = false; clearForm() },
+                          onConfirm: { vm.createQuickAdd(name: newName, calories: newCalories, protein: newProtein, icon: newIcon); showCreateQuickAdd = false; clearForm() })
     }
 
     private func editQuickAddSheet(_ qa: QuickAdd) -> some View {
-        NavigationStack {
-            Form {
-                EmojiTextField(text: $newIcon, placeholder: "Icon (emoji)")
-                TextField("Name", text: $newName)
-                TextField("Calories", text: $newCalories).keyboardType(.numberPad)
-                if !vm.hideProtein { TextField("Protein (g)", text: $newProtein).keyboardType(.numberPad) }
-            }
-            .navigationTitle("Edit Quick Add").navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { editingQuickAdd = nil; clearForm() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Save") { vm.updateQuickAdd(id: qa.id, name: newName, calories: newCalories, protein: newProtein, icon: newIcon); editingQuickAdd = nil; clearForm() } }
-            }
+        QuickAddFormSheet(title: "Edit Quick Add", icon: $newIcon, name: $newName, calories: $newCalories,
+                          protein: $newProtein, hideProtein: vm.hideProtein, confirmLabel: "Save", confirmDisabled: false,
+                          onCancel: { editingQuickAdd = nil; clearForm() },
+                          onConfirm: { vm.updateQuickAdd(id: qa.id, name: newName, calories: newCalories, protein: newProtein, icon: newIcon); editingQuickAdd = nil; clearForm() })
             .onAppear { newName = qa.name; newCalories = "\(qa.calories)"; newProtein = qa.protein.map { "\($0)" } ?? ""; newIcon = vm.iconDisplay(qa.icon) }
-        }.presentationDetents([.medium])
     }
 
     private func clearForm() { newName = ""; newCalories = ""; newProtein = ""; newIcon = "🍽️" }
-
-    private func formatTime(_ dc: DateComponents) -> String {
-        var cal = Calendar.current; cal.timeZone = .current
-        guard let date = cal.date(from: dc) else { return "" }
-        let f = DateFormatter(); f.timeStyle = .short; return f.string(from: date)
-    }
 }

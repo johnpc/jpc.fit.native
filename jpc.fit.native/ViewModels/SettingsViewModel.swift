@@ -40,51 +40,6 @@ class SettingsViewModel: ObservableObject {
         }
     }
 
-    func createQuickAdd(name: String, calories: String, protein: String, icon: String) {
-        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, let cal = Int(calories), cal > 0 else { return }
-        let ic = icon.isEmpty ? "🍽️" : icon
-        let prot = Int(protein)
-        Task {
-            var input: [String: Any] = ["name": trimmed, "calories": cal, "icon": ic]
-            if let p = prot { input["protein"] = p }
-            let req = GraphQLRequest<JSONValue>(
-                document: "mutation CreateQuickAdd($input: CreateQuickAddInput!) { createQuickAdd(input: $input) { id } }",
-                variables: ["input": input], responseType: JSONValue.self)
-            _ = try? await Amplify.API.mutate(request: req)
-            quickAdds = await fetchQuickAdds()
-        }
-    }
-
-    func updateQuickAdd(id: String, name: String, calories: String, protein: String, icon: String) {
-        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, let cal = Int(calories), cal > 0 else { return }
-        let ic = icon.isEmpty ? "🍽️" : icon
-        let prot = Int(protein)
-        Task {
-            var input: [String: Any] = ["id": id, "name": trimmed, "calories": cal, "icon": ic]
-            if let p = prot { input["protein"] = p }
-            let req = GraphQLRequest<JSONValue>(
-                document: "mutation UpdateQuickAdd($input: UpdateQuickAddInput!) { updateQuickAdd(input: $input) { id } }",
-                variables: ["input": input], responseType: JSONValue.self)
-            _ = try? await Amplify.API.mutate(request: req)
-            quickAdds = await fetchQuickAdds()
-        }
-    }
-
-    func deleteQuickAdd(at offsets: IndexSet) {
-        for i in offsets {
-            let qa = quickAdds[i]
-            Task {
-                let req = GraphQLRequest<JSONValue>(
-                    document: "mutation DeleteQuickAdd($input: DeleteQuickAddInput!) { deleteQuickAdd(input: $input) { id } }",
-                    variables: ["input": ["id": qa.id]], responseType: JSONValue.self)
-                _ = try? await Amplify.API.mutate(request: req)
-                quickAdds = await fetchQuickAdds()
-            }
-        }
-    }
-
     func deleteAccount() {
         Task {
             try? await Amplify.Auth.deleteUser()
@@ -98,40 +53,5 @@ class SettingsViewModel: ObservableObject {
 
     func iconDisplay(_ icon: String) -> String {
         icon.unicodeScalars.first?.properties.isEmoji == true ? icon : "🍽️"
-    }
-
-    private func fetchQuickAdds() async -> [QuickAdd] {
-        let req = GraphQLRequest<JSONValue>(
-            document: "query ListQuickAdds { listQuickAdds { items { id name calories protein icon } } }",
-            responseType: JSONValue.self)
-        do {
-            let result = try await Amplify.API.query(request: req)
-            if case .success(let json) = result,
-               let items = json["listQuickAdds"]?["items"]?.asArray {
-                return items.compactMap { item -> QuickAdd? in
-                    guard let id = item["id"]?.stringValue,
-                          let name = item["name"]?.stringValue,
-                          let cal = item["calories"]?.intValue else { return nil }
-                    return QuickAdd(id: id, name: name, calories: cal, protein: item["protein"]?.intValue, icon: item["icon"]?.stringValue ?? "🍽️")
-                }
-            }
-        } catch {}
-        return []
-    }
-
-    private func fetchPreferences() async -> Preferences? {
-        let req = GraphQLRequest<JSONValue>(
-            document: "query { listPreferences { items { id hideProtein hideSteps } } }",
-            responseType: JSONValue.self)
-        do {
-            let result = try await Amplify.API.query(request: req)
-            if case .success(let json) = result,
-               let items = json["listPreferences"]?["items"]?.asArray,
-               let first = items.first {
-                let id = first["id"]?.stringValue ?? UUID().uuidString
-                return Preferences(id: id, hideProtein: first["hideProtein"]?.booleanValue ?? false, hideSteps: first["hideSteps"]?.booleanValue ?? false)
-            }
-        } catch {}
-        return nil
     }
 }
