@@ -1,95 +1,45 @@
 # Acceptance Tests
 
-## Feature: User Login
+Acceptance tests are **Gherkin**. The source of truth is the `.feature` files in
+[`jpc.fit.nativeUITests/Features/`](jpc.fit.nativeUITests/Features/) — this file
+is just a human-readable catalogue of what they cover.
 
-```gherkin
-Feature: User Login
-  As a user
-  I want to sign in to the app
-  So that I can access my calorie tracking data
+## How it works
 
-  Scenario: Successful login
-    Given the app is launched
-    When I enter valid credentials
-    And I tap the sign in button
-    Then I should see the Calories tab
-    And the tab bar should show all 5 tabs
+```
+jpc.fit.nativeUITests/
+  Features/*.feature              ← source of truth (edit these)
+  GherkinParser.swift             ← tiny dependency-free .feature parser
+  StepRegistry.swift              ← regex-matched step registry + GherkinWorld
+  StepDefinitions.swift           ← Given/When/Then → XCUITest actions/assertions
+  AcceptanceTests.swift           ← runScenario(feature:scenario:) runner
+  AcceptanceTests.generated.swift ← @generated concrete test_… methods (committed)
 ```
 
-## Feature: Calories Tab
+Each `Scenario` in a `.feature` file becomes one concrete XCUITest method (so
+`-only-testing` filtering and crash recovery work by selector name). Those
+methods are **generated** — never hand-edit `AcceptanceTests.generated.swift`.
 
-```gherkin
-Feature: Calories Tab
-  As a signed-in user
-  I want to track my daily food intake
-  So that I can manage my calorie budget
+### Adding or changing a scenario
 
-  Scenario: View today's food list
-    Given I am signed in
-    And I am on the Calories tab
-    Then I should see the date navigation
-    And I should see the remaining calories section
+1. Edit/add a `.feature` file under `jpc.fit.nativeUITests/Features/`.
+2. Reuse existing step phrasings where possible; a genuinely new line needs a
+   matching definition in `StepDefinitions.swift` (its pattern is a regex).
+3. Regenerate and commit the methods:
+   `python3 scripts/generate_acceptance_tests.py`
+4. A quality gate (`--check`, in `scripts/quality.sh` and CI) fails if the
+   generated file drifts from the `.feature` files.
 
-  Scenario: Navigate to previous day
-    Given I am signed in
-    And I am on the Calories tab
-    When I tap the back button
-    Then the date should change to yesterday
-```
+The app signs in with the `TEST_EMAIL` / `TEST_PASSWORD` credentials (from the
+environment or a local `.env`) and grants the HealthKit permission prompt on
+first launch.
 
-## Feature: Weight Tab
+## Scenario catalogue
 
-```gherkin
-Feature: Weight Tab
-  As a signed-in user
-  I want to track my weight
-  So that I can monitor my progress
-
-  Scenario: View weight tab
-    Given I am signed in
-    When I tap the Weight tab
-    Then I should see the weight tracking view
-```
-
-## Feature: Stats Tab
-
-```gherkin
-Feature: Stats Tab
-  As a signed-in user
-  I want to view my calorie history
-  So that I can see weekly trends
-
-  Scenario: View stats
-    Given I am signed in
-    When I tap the Stats tab
-    Then I should see my weekly stats
-```
-
-## Feature: Quotes Tab
-
-```gherkin
-Feature: Quotes Tab
-  As a signed-in user
-  I want to view motivational quotes
-  So that I can stay inspired
-
-  Scenario: View quotes
-    Given I am signed in
-    When I tap the Quotes tab
-    Then I should see motivational content
-```
-
-## Feature: Settings Tab
-
-```gherkin
-Feature: Settings Tab
-  As a signed-in user
-  I want to manage my account settings
-  So that I can configure quick adds and sign out
-
-  Scenario: View settings
-    Given I am signed in
-    When I tap the Settings tab
-    Then I should see the settings view
-    And I should see a sign out button
-```
+- **User Login** (`login.feature`) — successful login lands on Calories with all 5 tabs.
+- **Calories Tab** (`calories.feature`) — today's food list (date nav + remaining
+  calories); navigating to the previous day.
+- **Weight Tab** (`weight.feature`) — the weight tracking view loads.
+- **Stats Tab** (`stats.feature`) — weekly stats load.
+- **Quotes Tab** (`quotes.feature`) — motivational content shows.
+- **Settings Tab** (`settings.feature`) — settings view with a Sign Out button.

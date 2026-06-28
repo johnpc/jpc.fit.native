@@ -19,11 +19,9 @@
 		AE62A64FA675EE359B986EFC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B77EE78D417E47A7EDEB6BE /* Foundation.framework */; };
 		B72FF9A19C8BFA838D71BF05 /* ViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0F6FBB19F57D6D67F487411 /* ViewModelTests.swift */; };
 		B846FC9A4B12B3D4CD35EE07 /* MockAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D18B7D69AD673F467FD03CD /* MockAPIService.swift */; };
-		B9FD22748F626A9C1249E611 /* AcceptanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12074D4A6D8E2CA7664D087C /* AcceptanceTests.swift */; };
 		C18E52601B591FD6A96E246D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B77EE78D417E47A7EDEB6BE /* Foundation.framework */; };
 		C4DB7B17D4D77C5F0665036B /* CalorieWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 772AC2455E6E3EE4796E639D /* CalorieWidget.swift */; };
 		CCF9B98E3B39BE620A5A3CC9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B77EE78D417E47A7EDEB6BE /* Foundation.framework */; };
-		D03938E9BF8560870493DB56 /* DateNavigationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F97C19BEA3DB4EDD306A57 /* DateNavigationUITests.swift */; };
 		E81F97FF8676EAE88CE7C2CC /* FoodViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4194BE0467D6FD2DE973FBD /* FoodViewModelTests.swift */; };
 		ED5356B415C5C02A0951541A /* com.johncorser.fit.watchkitapp Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = A615C8202F2BF9D100F36993 /* com.johncorser.fit.watchkitapp Watch App.app */; };
 		FFA3F80EC025B7E08E07D721 /* DatePickerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54875060E0756520DDD8C091 /* DatePickerTests.swift */; };
@@ -105,7 +103,6 @@
 
 /* Begin PBXFileReference section */
 		07FE64B438A617B1C0C531F9 /* ModelsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ModelsTests.swift; sourceTree = "<group>"; };
-		12074D4A6D8E2CA7664D087C /* AcceptanceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AcceptanceTests.swift; sourceTree = "<group>"; };
 		3B77EE78D417E47A7EDEB6BE /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		407C94A290F3969B7142C63C /* jpc.fit.nativeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = jpc.fit.nativeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		54875060E0756520DDD8C091 /* DatePickerTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DatePickerTests.swift; sourceTree = "<group>"; };
@@ -116,7 +113,6 @@
 		A615C90E2F2BFDBC00F36993 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		A615C9102F2BFDBC00F36993 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		A6F519B52F292AF4003875EA /* jpc.fit.native.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = jpc.fit.native.app; path = jpc.fit.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		A7F97C19BEA3DB4EDD306A57 /* DateNavigationUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DateNavigationUITests.swift; sourceTree = "<group>"; };
 		B0F6FBB19F57D6D67F487411 /* ViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ViewModelTests.swift; sourceTree = "<group>"; };
 		CCFEBEC96E61FFE2E5E96FB1 /* jpc.fit.widget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = jpc.fit.widget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		F4194BE0467D6FD2DE973FBD /* FoodViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FoodViewModelTests.swift; sourceTree = "<group>"; };
@@ -154,6 +150,13 @@
 			exceptions = (
 			);
 			path = jpc.fit.native;
+			sourceTree = "<group>";
+		};
+		F803BBE417142F6C427A9199 /* jpc.fit.nativeUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
+			path = jpc.fit.nativeUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -288,15 +291,6 @@
 			path = jpc.fit.nativeTests;
 			sourceTree = "<group>";
 		};
-		F803BBE417142F6C427A9199 /* jpc.fit.nativeUITests */ = {
-			isa = PBXGroup;
-			children = (
-				A7F97C19BEA3DB4EDD306A57 /* DateNavigationUITests.swift */,
-				12074D4A6D8E2CA7664D087C /* AcceptanceTests.swift */,
-			);
-			path = jpc.fit.nativeUITests;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -312,6 +306,9 @@
 			);
 			dependencies = (
 				58A5920358DA56001D77BF8C /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				F803BBE417142F6C427A9199 /* jpc.fit.nativeUITests */,
 			);
 			name = jpc.fit.nativeUITests;
 			productName = jpc.fit.nativeUITests;
@@ -536,8 +533,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D03938E9BF8560870493DB56 /* DateNavigationUITests.swift in Sources */,
-				B9FD22748F626A9C1249E611 /* AcceptanceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
