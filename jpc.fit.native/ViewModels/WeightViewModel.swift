@@ -34,10 +34,15 @@ class WeightViewModel: ObservableObject {
         isLoading = false
     }
 
+    // Saves are OPTIMISTIC: the row is inserted at tap time and stays — no
+    // post-write refetch (it flipped isLoading and grayed the screen for the
+    // whole round trip, and an immediate re-list can miss the new row anyway
+    // per DynamoDB eventual consistency). On failure: toast + roll back.
     func saveWeight(_ value: String) {
         guard let val = Int(value), val > 0 else { return }
         Task {
-            weights.insert(Weight(currentWeight: val, createdAt: .now()), at: 0)
+            let optimistic = Weight(currentWeight: val, createdAt: .now())
+            weights.insert(optimistic, at: 0)
             let request = GraphQLRequest<JSONValue>(
                 document: "mutation CreateWeight($input: CreateWeightInput!) { createWeight(input: $input) { id } }",
                 variables: ["input": ["currentWeight": val]],
@@ -45,16 +50,22 @@ class WeightViewModel: ObservableObject {
                 authMode: AWSAuthorizationType.amazonCognitoUserPools)
             do {
                 let result = try await Amplify.API.mutate(request: request)
-                if case .failure(let error) = result { showError("Weight: \(error.errorDescription)") }
-            } catch { showError("Weight: \(error.localizedDescription)") }
-            await fetchData()
+                if case .failure(let error) = result {
+                    showError("Weight: \(error.errorDescription)")
+                    weights.removeAll { $0.id == optimistic.id }
+                }
+            } catch {
+                showError("Weight: \(error.localizedDescription)")
+                weights.removeAll { $0.id == optimistic.id }
+            }
         }
     }
 
     func saveHeight(_ value: String) {
         guard let val = Int(value), val > 0 else { return }
         Task {
-            heights.insert(Height(currentHeight: val, createdAt: .now()), at: 0)
+            let optimistic = Height(currentHeight: val, createdAt: .now())
+            heights.insert(optimistic, at: 0)
             let request = GraphQLRequest<JSONValue>(
                 document: "mutation CreateHeight($input: CreateHeightInput!) { createHeight(input: $input) { id } }",
                 variables: ["input": ["currentHeight": val]],
@@ -62,9 +73,14 @@ class WeightViewModel: ObservableObject {
                 authMode: AWSAuthorizationType.amazonCognitoUserPools)
             do {
                 let result = try await Amplify.API.mutate(request: request)
-                if case .failure(let error) = result { showError("Height: \(error.errorDescription)") }
-            } catch { showError("Height: \(error.localizedDescription)") }
-            await fetchData()
+                if case .failure(let error) = result {
+                    showError("Height: \(error.errorDescription)")
+                    heights.removeAll { $0.id == optimistic.id }
+                }
+            } catch {
+                showError("Height: \(error.localizedDescription)")
+                heights.removeAll { $0.id == optimistic.id }
+            }
         }
     }
 

@@ -30,11 +30,12 @@ VIEW_FILES = {
     "DatePickerSection.swift", "EmojiTextField.swift", "FoodFormSheet.swift",
     "QuickAddFormSheet.swift", "NotificationsSection.swift",
     "QuickAddsListSection.swift", "jpc_fit_nativeApp.swift",
+    "FoodListView+Actions.swift",
     # Services/ViewModels that call Amplify/HealthKit directly (acceptance-covered)
     "HealthKitService.swift", "PhoneConnectivityManager.swift",
     "BackgroundSyncService.swift",
     "NotificationManager.swift", "NotificationManager+Scheduling.swift",
-    "APIService.swift", "APIService+Parsing.swift",
+    "APIService.swift", "APIService+Parsing.swift", "APIService+HealthKitCache.swift",
     "WeightViewModel.swift", "WeightViewModel+Fetch.swift",
     "StatsViewModel.swift", "StatsViewModel+HealthKit.swift",
     "SettingsViewModel.swift", "SettingsViewModel+Fetch.swift",

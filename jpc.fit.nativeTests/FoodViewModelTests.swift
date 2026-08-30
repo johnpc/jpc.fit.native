@@ -96,6 +96,30 @@ final class FoodViewModelTests: XCTestCase {
         XCTAssertEqual(created.first?.protein, 10)
     }
 
+    func testAddFoodIsOptimistic() async {
+        // The row (and the totals it drives) must appear WITHOUT any refetch —
+        // no fetchFoods round trip after the write.
+        let today = Date().formatted(date: .numeric, time: .omitted)
+        await vm.addFood(name: "Salad", calories: 200, protein: 10, day: today)
+        XCTAssertEqual(vm.foods.count, 1)
+        XCTAssertEqual(vm.totalCalories, 200)
+        let fetches = await mockAPI.getFetchFoodsCalls()
+        XCTAssertEqual(fetches, 0, "optimistic add must not refetch the list")
+    }
+
+    func testDeleteFoodIsOptimistic() async {
+        let today = Date().formatted(date: .numeric, time: .omitted)
+        let food = Food(id: "opt-del", name: "Junk", calories: 500, day: today)
+        await mockAPI.setFoods([food])
+        await vm.fetchAll(day: today, date: Date())
+        let fetchesAfterLoad = await mockAPI.getFetchFoodsCalls()
+
+        await vm.deleteFood(food, day: today)
+        XCTAssertTrue(vm.foods.isEmpty, "row disappears at tap time")
+        let fetches = await mockAPI.getFetchFoodsCalls()
+        XCTAssertEqual(fetches, fetchesAfterLoad, "optimistic delete must not refetch the list")
+    }
+
     // MARK: - Delete Food
 
     func testDeleteFood() async {
