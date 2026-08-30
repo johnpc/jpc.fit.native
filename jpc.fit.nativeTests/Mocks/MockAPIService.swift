@@ -11,9 +11,14 @@ actor MockAPIService: APIServiceProtocol {
     var createdCaches: [(active: Double, base: Double, steps: Double, day: String)] = []
     var updatedCaches: [(id: String, active: Double, base: Double, steps: Double)] = []
 
+    var fetchFoodsCalls = 0
+
     func fetchFoods(day: String) async -> [Food] {
-        foods.filter { $0.day == day }
+        fetchFoodsCalls += 1
+        return foods.filter { $0.day == day }
     }
+
+    func getFetchFoodsCalls() -> Int { fetchFoodsCalls }
 
     func fetchHealthKitCache(day: String) async -> HealthKitCache? {
         healthKitCache
@@ -23,10 +28,12 @@ actor MockAPIService: APIServiceProtocol {
         quickAdds
     }
 
-    func createFood(name: String, calories: Int, protein: Int?, day: String) async {
+    @discardableResult
+    func createFood(name: String, calories: Int, protein: Int?, day: String) async -> String? {
         let food = Food(id: UUID().uuidString, name: name, calories: calories, protein: protein, day: day)
         foods.append(food)
         createdFoods.append((name, calories, protein, day))
+        return food.id
     }
 
     func deleteFood(id: String) async {

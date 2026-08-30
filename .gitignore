@@ -3,3 +3,4 @@ TestResults.xcresult
 DerivedData/
 .env
 .DS_Store
+coverage.json

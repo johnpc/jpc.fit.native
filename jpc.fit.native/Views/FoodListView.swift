@@ -3,15 +3,16 @@ import Amplify
 
 struct FoodListView: View {
     let user: AuthUser
-    @StateObject private var vm = FoodViewModel()
-    @State private var selectedDate = Date()
-    @State private var showingAddFood = false
-    @State private var editingFood: Food?
-    @State private var newFoodName = ""
-    @State private var newFoodCalories = ""
-    @State private var newFoodProtein = ""
+    // Internal (not private) so FoodListView+Actions can reach them.
+    @StateObject var vm = FoodViewModel()
+    @State var selectedDate = Date()
+    @State var showingAddFood = false
+    @State var editingFood: Food?
+    @State var newFoodName = ""
+    @State var newFoodCalories = ""
+    @State var newFoodProtein = ""
 
-    private var dayString: String { selectedDate.formatted(date: .numeric, time: .omitted) }
+    var dayString: String { selectedDate.formatted(date: .numeric, time: .omitted) }
 
     var body: some View {
         NavigationStack {
@@ -40,8 +41,11 @@ struct FoodListView: View {
             await vm.requestHealthKitPermission()
             await vm.fetchAll(day: dayString, date: selectedDate)
         }
-        .onReceive(NotificationCenter.default.publisher(for: .foodDataChanged)) { _ in
-            Task { await vm.fetchAll(day: dayString, date: selectedDate) }
+        .onReceive(NotificationCenter.default.publisher(for: .foodDataChanged)) { note in
+            // Our own optimistic writes already updated `foods` — only reconcile
+            // changes from elsewhere (watch), and silently (no spinner flash).
+            guard (note.object as? FoodViewModel) !== vm else { return }
+            Task { await vm.fetchAll(day: dayString, date: selectedDate, showLoading: false) }
         }
     }
 
@@ -70,30 +74,4 @@ struct FoodListView: View {
             .onAppear { newFoodName = food.name ?? ""; newFoodCalories = "\(food.calories)"; newFoodProtein = food.protein.map { "\($0)" } ?? "" }
     }
 
-    private func addQuickFood(_ qa: QuickAddItem) {
-        Task { await vm.addFood(name: "\(qa.icon) \(qa.name)", calories: qa.calories, protein: qa.protein, day: dayString) }
-    }
-
-    private func addCustomFood() {
-        if let cal = Int(newFoodCalories), cal > 0 {
-            let name = "🍽️ \(newFoodName.isEmpty ? "Food" : newFoodName)"
-            let protein = Int(newFoodProtein)
-            Task { await vm.addFood(name: name, calories: cal, protein: protein, day: dayString) }
-        }
-        clearForm()
-    }
-
-    private func deleteFood(at offsets: IndexSet) {
-        for i in offsets { Task { await vm.deleteFood(vm.foods[i], day: dayString) } }
-    }
-
-    private func updateFood(_ food: Food) {
-        guard let cal = Int(newFoodCalories), cal > 0 else { clearForm(); return }
-        let protein = Int(newFoodProtein)
-        let name = newFoodName.isEmpty ? nil : newFoodName
-        Task { await vm.updateFood(id: food.id, name: name, calories: cal, protein: protein, day: dayString) }
-        clearForm()
-    }
-
-    private func clearForm() { newFoodName = ""; newFoodCalories = ""; newFoodProtein = "" }
 }
