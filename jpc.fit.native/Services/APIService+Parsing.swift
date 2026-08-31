@@ -24,6 +24,13 @@ extension APIService {
         return HealthKitCache(id: id, activeCalories: active, baseCalories: base, steps: steps, day: day)
     }
 
+    func parsePreferences(_ item: JSONValue) -> Preferences? {
+        guard case .string(let id) = item.value(at: "id") else { return nil }
+        let hideProtein: Bool = if case .boolean(let b) = item.value(at: "hideProtein") { b } else { false }
+        let hideSteps: Bool = if case .boolean(let b) = item.value(at: "hideSteps") { b } else { false }
+        return Preferences(id: id, hideProtein: hideProtein, hideSteps: hideSteps)
+    }
+
     func parseQuickAdd(_ item: JSONValue) -> QuickAddItem? {
         guard case .string(let id) = item.value(at: "id"),
               case .string(let name) = item.value(at: "name"),

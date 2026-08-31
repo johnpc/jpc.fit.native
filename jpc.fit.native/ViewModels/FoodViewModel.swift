@@ -42,11 +42,13 @@ class FoodViewModel: ObservableObject {
         async let foodsTask = api.fetchFoods(day: day)
         async let cacheTask = api.fetchHealthKitCache(day: day)
         async let quickAddsTask = api.fetchQuickAdds()
+        async let preferencesTask = api.fetchPreferences()
 
-        let (f, c, q) = await (foodsTask, cacheTask, quickAddsTask)
+        let (f, c, q, p) = await (foodsTask, cacheTask, quickAddsTask, preferencesTask)
         foods = f
         healthKitCache = c
         userQuickAdds = q
+        preferences = p
 
         // Sync HealthKit after we know if cache exists
         await syncHealthKit(day: day, date: date)

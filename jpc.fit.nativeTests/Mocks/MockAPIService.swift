@@ -28,6 +28,14 @@ actor MockAPIService: APIServiceProtocol {
         quickAdds
     }
 
+    var preferences: Preferences?
+
+    func fetchPreferences() async -> Preferences? {
+        preferences
+    }
+
+    func setPreferences(_ p: Preferences?) { preferences = p }
+
     @discardableResult
     func createFood(name: String, calories: Int, protein: Int?, day: String) async -> String? {
         let food = Food(id: UUID().uuidString, name: name, calories: calories, protein: protein, day: day)
