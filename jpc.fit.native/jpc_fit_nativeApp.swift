@@ -8,9 +8,9 @@ import HealthKit
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     func applicationShouldRequestHealthAuthorization(_ application: UIApplication) {
-        HKHealthStore().handleAuthorizationForExtension { success, error in
+        HKHealthStore().handleAuthorizationForExtension { _, error in
             if let error {
-                print("Watch HealthKit auth error: \(error)")
+                Log.app.error("Watch HealthKit auth error: \(error)")
             }
         }
     }
@@ -32,9 +32,8 @@ struct jpc_fit_nativeApp: App {
             try Amplify.add(plugin: AWSCognitoAuthPlugin())
             try Amplify.add(plugin: AWSAPIPlugin())
             try Amplify.configure(with: .amplifyOutputs)
-            print("Amplify configured successfully")
         } catch {
-            print("Failed to configure Amplify: \(error)")
+            Log.app.error("Failed to configure Amplify: \(error)")
         }
     }
     

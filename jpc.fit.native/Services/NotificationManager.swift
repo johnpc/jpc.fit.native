@@ -32,7 +32,7 @@ class NotificationManager: ObservableObject {
             }
             return granted
         } catch {
-            print("Notification permission error: \(error)")
+            Log.notifications.error("Notification permission error: \(error)")
             return false
         }
     }
