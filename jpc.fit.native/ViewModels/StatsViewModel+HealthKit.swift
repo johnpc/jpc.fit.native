@@ -5,12 +5,14 @@ import HealthKit
 /// HealthKit querying and cache-write helpers for `StatsViewModel`. Kept apart
 /// from the week/streak aggregation so each file stays small.
 extension StatsViewModel {
-    nonisolated func fetchFoodCalories(day: String) async -> [Int] {
+    /// nil means the request FAILED — callers must not confuse that with an
+    /// empty day, or one flaky request ends the streak at the wrong number.
+    nonisolated func fetchFoodCalories(day: String) async -> [Int]? {
         let req = GraphQLRequest<JSONValue>(
             document: "query($day:String!){listFoodByDay(day:$day){items{calories}}}",
             variables: ["day": day], responseType: JSONValue.self)
         guard case .success(let data) = try? await Amplify.API.query(request: req),
-              let items = data["listFoodByDay"]?["items"]?.asArray else { return [] }
+              let items = data["listFoodByDay"]?["items"]?.asArray else { return nil }
         return items.compactMap { $0["calories"]?.intValue }
     }
 

@@ -39,6 +39,7 @@ VIEW_FILES = {
     "APIService+Preferences.swift",
     "WeightViewModel.swift", "WeightViewModel+Fetch.swift",
     "StatsViewModel.swift", "StatsViewModel+HealthKit.swift",
+    "StatsViewModel+Streak.swift",
     "SettingsViewModel.swift", "SettingsViewModel+Fetch.swift",
     "SettingsViewModel+QuickAdds.swift",
 }

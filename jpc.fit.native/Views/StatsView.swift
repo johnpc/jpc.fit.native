@@ -3,6 +3,8 @@ import SwiftUI
 struct StatsView: View {
     @StateObject private var vm = StatsViewModel()
     @State private var refreshTrigger = UUID()
+    @State private var isVisible = false
+    @State private var isStale = false
 
     var body: some View {
         List {
@@ -13,9 +15,21 @@ struct StatsView: View {
             dailyBreakdownSection
         }
         .navigationTitle("Stats")
-        .task(id: refreshTrigger) { await vm.refresh() }
+        .task(id: refreshTrigger) { await vm.refresh(); isStale = false }
         .refreshable { await vm.refresh() }
-        .onReceive(NotificationCenter.default.publisher(for: .foodDataChanged)) { _ in refreshTrigger = UUID() }
+        // TabView keeps this view alive in the background, and every food
+        // add/edit/delete posts .foodDataChanged. Refreshing immediately would
+        // rerun the whole week + streak walk per tap while the tab isn't even
+        // on screen — so off-screen we only mark the data stale and refresh
+        // once on next appearance.
+        .onReceive(NotificationCenter.default.publisher(for: .foodDataChanged)) { _ in
+            if isVisible { refreshTrigger = UUID() } else { isStale = true }
+        }
+        .onAppear {
+            isVisible = true
+            if isStale { refreshTrigger = UUID() }
+        }
+        .onDisappear { isVisible = false }
         .overlay { if vm.isLoading { ProgressView() } }
     }
 
@@ -23,7 +37,8 @@ struct StatsView: View {
         Section {
             VStack(spacing: 8) {
                 if let days = vm.streakDays {
-                    Text("Your streak is \(days) days").font(.headline)
+                    let label = days >= StatsViewModel.streakCap ? "\(days)+" : "\(days)"
+                    Text("Your streak is \(label) days").font(.headline)
                     Text("Est. \(vm.streakLbs, specifier: "%.1f") lbs \(vm.streakLbs > 0 ? "gained" : "lost")")
                         .font(.subheadline)
                         .foregroundStyle(vm.streakLbs > 0 ? .red : .green)
