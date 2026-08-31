@@ -24,6 +24,7 @@
 		CCF9B98E3B39BE620A5A3CC9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B77EE78D417E47A7EDEB6BE /* Foundation.framework */; };
 		E81F97FF8676EAE88CE7C2CC /* FoodViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4194BE0467D6FD2DE973FBD /* FoodViewModelTests.swift */; };
 		DA1BEEF002DA1BEEF002DA1B /* DayKeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1BEEF001DA1BEEF001DA1B /* DayKeyTests.swift */; };
+		DA1BEEF004DA1BEEF004DA1B /* NotificationManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1BEEF003DA1BEEF003DA1B /* NotificationManagerTests.swift */; };
 		ED5356B415C5C02A0951541A /* com.johncorser.fit.watchkitapp Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = A615C8202F2BF9D100F36993 /* com.johncorser.fit.watchkitapp Watch App.app */; };
 /* End PBXBuildFile section */
 
@@ -116,6 +117,7 @@
 		CCFEBEC96E61FFE2E5E96FB1 /* jpc.fit.widget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = jpc.fit.widget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		F4194BE0467D6FD2DE973FBD /* FoodViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FoodViewModelTests.swift; sourceTree = "<group>"; };
 		DA1BEEF001DA1BEEF001DA1B /* DayKeyTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DayKeyTests.swift; sourceTree = "<group>"; };
+		DA1BEEF003DA1BEEF003DA1B /* NotificationManagerTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NotificationManagerTests.swift; sourceTree = "<group>"; };
 		F66BD876D981F3FB810AD5AD /* jpc.fit.nativeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = jpc.fit.nativeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -284,6 +286,7 @@
 				262AA76D9EC6E3E8B5CD507B /* Mocks */,
 				F4194BE0467D6FD2DE973FBD /* FoodViewModelTests.swift */,
 				DA1BEEF001DA1BEEF001DA1B /* DayKeyTests.swift */,
+				DA1BEEF003DA1BEEF003DA1B /* NotificationManagerTests.swift */,
 				07FE64B438A617B1C0C531F9 /* ModelsTests.swift */,
 				B0F6FBB19F57D6D67F487411 /* ViewModelTests.swift */,
 			);
@@ -523,6 +526,7 @@
 			files = (
 				E81F97FF8676EAE88CE7C2CC /* FoodViewModelTests.swift in Sources */,
 				DA1BEEF002DA1BEEF002DA1B /* DayKeyTests.swift in Sources */,
+				DA1BEEF004DA1BEEF004DA1B /* NotificationManagerTests.swift in Sources */,
 				95E5B73E6857D33EE6EA0958 /* ModelsTests.swift in Sources */,
 				B846FC9A4B12B3D4CD35EE07 /* MockAPIService.swift in Sources */,
 				B72FF9A19C8BFA838D71BF05 /* ViewModelTests.swift in Sources */,
