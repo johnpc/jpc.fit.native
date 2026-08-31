@@ -12,7 +12,10 @@ struct FoodListView: View {
     @State var newFoodCalories = ""
     @State var newFoodProtein = ""
 
-    var dayString: String { selectedDate.formatted(date: .numeric, time: .omitted) }
+    /// Backend partition key — locale-stable, never shown to the user.
+    var dayString: String { DayKey.string(from: selectedDate) }
+    /// What the user sees — follows the device region.
+    var dayLabel: String { selectedDate.formatted(date: .numeric, time: .omitted) }
 
     var body: some View {
         NavigationStack {
@@ -21,7 +24,7 @@ struct FoodListView: View {
                 dateSection
                 RemainingSection(remaining: vm.remainingCalories, protein: vm.totalProtein, hideProtein: vm.hideProtein)
                 HealthKitSection(cache: vm.healthKitCache, consumed: vm.totalCalories, hideSteps: vm.hideSteps)
-                FoodSection(foods: vm.foods, isLoading: vm.isLoading, dayString: dayString, hideProtein: vm.hideProtein, onDelete: deleteFood, onEdit: { editingFood = $0 })
+                FoodSection(foods: vm.foods, isLoading: vm.isLoading, dayString: dayLabel, hideProtein: vm.hideProtein, onDelete: deleteFood, onEdit: { editingFood = $0 })
                 QuickAddSection(quickAdds: vm.quickAdds, onQuickAdd: addQuickFood, onCustomAdd: { showingAddFood = true })
                 ErrorSection(error: vm.errorMessage)
             }
@@ -56,7 +59,7 @@ struct FoodListView: View {
                     Image(systemName: "chevron.left").frame(width: 44, height: 44).contentShape(Rectangle())
                 }.buttonStyle(.borderless)
                 Spacer()
-                Text(dayString).fontWeight(.bold)
+                Text(dayLabel).fontWeight(.bold)
                 Spacer()
                 Button { selectedDate = Calendar.current.date(byAdding: .day, value: 1, to: selectedDate)! } label: {
                     Image(systemName: "chevron.right").frame(width: 44, height: 44).contentShape(Rectangle())

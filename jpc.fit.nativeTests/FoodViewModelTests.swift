@@ -15,7 +15,7 @@ final class FoodViewModelTests: XCTestCase {
     // MARK: - Computed Properties
 
     func testTotalCalories() async {
-        let today = Date().formatted(date: .numeric, time: .omitted)
+        let today = DayKey.today
         await mockAPI.setFoods([
             Food(id: "1", name: "Apple", calories: 100, day: today),
             Food(id: "2", name: "Bread", calories: 250, day: today),
@@ -25,7 +25,7 @@ final class FoodViewModelTests: XCTestCase {
     }
 
     func testTotalProtein() async {
-        let today = Date().formatted(date: .numeric, time: .omitted)
+        let today = DayKey.today
         await mockAPI.setFoods([
             Food(id: "1", name: "Chicken", calories: 300, protein: 30, day: today),
             Food(id: "2", name: "Rice", calories: 200, protein: 5, day: today),
@@ -36,14 +36,14 @@ final class FoodViewModelTests: XCTestCase {
     }
 
     func testBurnedCalories() async {
-        let today = Date().formatted(date: .numeric, time: .omitted)
+        let today = DayKey.today
         await mockAPI.setCache(HealthKitCache(id: "c1", activeCalories: 500, baseCalories: 1800, steps: 8000, day: today))
         await vm.fetchAll(day: today, date: Date())
         XCTAssertEqual(vm.burnedCalories, 2300)
     }
 
     func testRemainingCalories() async {
-        let today = Date().formatted(date: .numeric, time: .omitted)
+        let today = DayKey.today
         await mockAPI.setFoods([Food(id: "1", name: "Lunch", calories: 800, day: today)])
         await mockAPI.setCache(HealthKitCache(id: "c1", activeCalories: 400, baseCalories: 1600, steps: 5000, day: today))
         await vm.fetchAll(day: today, date: Date())
@@ -51,13 +51,13 @@ final class FoodViewModelTests: XCTestCase {
     }
 
     func testQuickAddsDefaultsWhenEmpty() async {
-        let today = Date().formatted(date: .numeric, time: .omitted)
+        let today = DayKey.today
         await vm.fetchAll(day: today, date: Date())
         XCTAssertEqual(vm.quickAdds.count, defaultQuickAdds.count)
     }
 
     func testQuickAddsUsesUserAddsWhenAvailable() async {
-        let today = Date().formatted(date: .numeric, time: .omitted)
+        let today = DayKey.today
         let custom = [QuickAddItem(id: "qa1", name: "Coffee", calories: 50, icon: "☕", protein: nil)]
         await mockAPI.setQuickAdds(custom)
         await vm.fetchAll(day: today, date: Date())
@@ -68,14 +68,14 @@ final class FoodViewModelTests: XCTestCase {
     // MARK: - Fetch
 
     func testFetchAllSetsLoadingState() async {
-        let today = Date().formatted(date: .numeric, time: .omitted)
+        let today = DayKey.today
         XCTAssertTrue(vm.isLoading)
         await vm.fetchAll(day: today, date: Date())
         XCTAssertFalse(vm.isLoading)
     }
 
     func testFetchAllPopulatesFoods() async {
-        let today = Date().formatted(date: .numeric, time: .omitted)
+        let today = DayKey.today
         await mockAPI.setFoods([
             Food(id: "1", name: "Breakfast", calories: 400, day: today),
         ])
@@ -87,7 +87,7 @@ final class FoodViewModelTests: XCTestCase {
     // MARK: - Add Food
 
     func testAddFood() async {
-        let today = Date().formatted(date: .numeric, time: .omitted)
+        let today = DayKey.today
         await vm.addFood(name: "Salad", calories: 200, protein: 10, day: today)
         let created = await mockAPI.getCreatedFoods()
         XCTAssertEqual(created.count, 1)
@@ -99,7 +99,7 @@ final class FoodViewModelTests: XCTestCase {
     func testAddFoodIsOptimistic() async {
         // The row (and the totals it drives) must appear WITHOUT any refetch —
         // no fetchFoods round trip after the write.
-        let today = Date().formatted(date: .numeric, time: .omitted)
+        let today = DayKey.today
         await vm.addFood(name: "Salad", calories: 200, protein: 10, day: today)
         XCTAssertEqual(vm.foods.count, 1)
         XCTAssertEqual(vm.totalCalories, 200)
@@ -108,7 +108,7 @@ final class FoodViewModelTests: XCTestCase {
     }
 
     func testDeleteFoodIsOptimistic() async {
-        let today = Date().formatted(date: .numeric, time: .omitted)
+        let today = DayKey.today
         let food = Food(id: "opt-del", name: "Junk", calories: 500, day: today)
         await mockAPI.setFoods([food])
         await vm.fetchAll(day: today, date: Date())
@@ -123,7 +123,7 @@ final class FoodViewModelTests: XCTestCase {
     // MARK: - Delete Food
 
     func testDeleteFood() async {
-        let today = Date().formatted(date: .numeric, time: .omitted)
+        let today = DayKey.today
         let food = Food(id: "del-1", name: "Junk", calories: 500, day: today)
         await mockAPI.setFoods([food])
         await vm.fetchAll(day: today, date: Date())
@@ -137,7 +137,7 @@ final class FoodViewModelTests: XCTestCase {
     // MARK: - Update Food
 
     func testUpdateFood() async {
-        let today = Date().formatted(date: .numeric, time: .omitted)
+        let today = DayKey.today
         await mockAPI.setFoods([Food(id: "upd-1", name: "Old", calories: 100, day: today)])
         await vm.fetchAll(day: today, date: Date())
 
@@ -160,7 +160,7 @@ final class FoodViewModelTests: XCTestCase {
     }
 
     func testRemainingCaloriesNegativeWhenOverEating() async {
-        let today = Date().formatted(date: .numeric, time: .omitted)
+        let today = DayKey.today
         await mockAPI.setFoods([Food(id: "1", name: "Feast", calories: 3000, day: today)])
         await mockAPI.setCache(HealthKitCache(id: "c1", activeCalories: 300, baseCalories: 1700, steps: 5000, day: today))
         await vm.fetchAll(day: today, date: Date())
