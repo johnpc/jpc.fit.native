@@ -122,10 +122,6 @@ class WatchDataManager: NSObject, ObservableObject {
         }
     }
     
-    private func requestDataFromPhone() {
-        session?.sendMessage(["action": "requestData"], replyHandler: nil, errorHandler: nil)
-    }
-    
     private func loadCachedData() {
         consumedCalories = defaults?.integer(forKey: "watchConsumed") ?? 0
         burnedCalories = defaults?.integer(forKey: "watchBurned") ?? 0
@@ -172,18 +168,22 @@ extension WatchDataManager: WCSessionDelegate {
     }
 }
 
+/// The id/name/calories triple every phone→watch payload carries.
+private func parseCore(_ dict: [String: Any]) -> (id: String, name: String, calories: Int)? {
+    guard let id = dict["id"] as? String,
+          let name = dict["name"] as? String,
+          let calories = dict["calories"] as? Int else { return nil }
+    return (id, name, calories)
+}
+
 struct WatchFood: Identifiable {
     let id: String
     let name: String
     let calories: Int
-    
+
     init?(dict: [String: Any]) {
-        guard let id = dict["id"] as? String,
-              let name = dict["name"] as? String,
-              let calories = dict["calories"] as? Int else { return nil }
-        self.id = id
-        self.name = name
-        self.calories = calories
+        guard let core = parseCore(dict) else { return nil }
+        (id, name, calories) = core
     }
 }
 
@@ -193,18 +193,14 @@ struct WatchQuickAdd: Identifiable, Codable {
     let calories: Int
     let icon: String
     let protein: Int?
-    
+
     init?(dict: [String: Any]) {
-        guard let id = dict["id"] as? String,
-              let name = dict["name"] as? String,
-              let calories = dict["calories"] as? Int else { return nil }
-        self.id = id
-        self.name = name
-        self.calories = calories
-        self.icon = dict["icon"] as? String ?? "🍽️"
-        self.protein = dict["protein"] as? Int
+        guard let core = parseCore(dict) else { return nil }
+        (id, name, calories) = core
+        icon = dict["icon"] as? String ?? "🍽️"
+        protein = dict["protein"] as? Int
     }
-    
+
     init(id: String, name: String, calories: Int, icon: String, protein: Int?) {
         self.id = id
         self.name = name

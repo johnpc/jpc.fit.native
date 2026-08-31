@@ -92,6 +92,14 @@ the code, never the gate.
 - **CRAP ≤ 30 per function** (`scripts/crap_check.py`, decision-point based). Over →
   raise its coverage or reduce its complexity (extract the branchy bit into a tested
   helper).
+- **No dead code** (`scripts/dead_code_check.py`) — unreferenced declarations fail;
+  delete them (runtime entry points live in the script's `ENTRY_POINTS`).
+- **No duplicated blocks** (`scripts/duplication_check.py`) — a repeated 6-line
+  normalized block fails; extract a shared helper.
+- **No `Any`/`AnyObject`** (`scripts/banned_types_check.py`) — `[String: Any]` is
+  allowed only as Amplify/WCSession bridging; everything else needs a concrete type.
+- **Halstead difficulty ≤ 20 per function** (`scripts/halstead_check.py`) — split
+  dense expressions into named intermediate steps.
 - **Acceptance tests are always Gherkin** — real `.feature` files in
   `jpc.fit.nativeUITests/Features/`, executed by the native runner. Never ship a
   feature without its acceptance scenario. The concrete XCUITest methods are
