@@ -64,21 +64,27 @@ actor APIService {
         return nil
     }
     
-    func deleteFood(id: String) async {
+    /// Returns whether the delete reached the backend, so optimistic UI can roll back.
+    @discardableResult
+    func deleteFood(id: String) async -> Bool {
         let req = GraphQLRequest<JSONValue>(
             document: "mutation($input:DeleteFoodInput!){deleteFood(input:$input){id}}",
             variables: ["input": ["id": id]], responseType: JSONValue.self)
-        _ = try? await Amplify.API.mutate(request: req)
+        guard case .success = try? await Amplify.API.mutate(request: req) else { return false }
+        return true
     }
-    
-    func updateFood(id: String, name: String?, calories: Int, protein: Int?) async {
-        var input: [String: Any] = ["id": id, "calories": calories]
+
+    /// `protein: nil` explicitly clears the stored value (sends JSON null) —
+    /// omitting the key would silently keep the old protein on the server.
+    @discardableResult
+    func updateFood(id: String, name: String?, calories: Int, protein: Int?) async -> Bool {
+        var input: [String: Any] = ["id": id, "calories": calories, "protein": protein ?? NSNull()]
         if let n = name { input["name"] = n }
-        if let p = protein { input["protein"] = p }
         let req = GraphQLRequest<JSONValue>(
             document: "mutation($input:UpdateFoodInput!){updateFood(input:$input){id}}",
             variables: ["input": input], responseType: JSONValue.self)
-        _ = try? await Amplify.API.mutate(request: req)
+        guard case .success = try? await Amplify.API.mutate(request: req) else { return false }
+        return true
     }
-    
+
 }

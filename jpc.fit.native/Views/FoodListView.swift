@@ -38,9 +38,10 @@ struct FoodListView: View {
                               onConfirm: { addCustomFood(); showingAddFood = false })
             }
             .sheet(item: $editingFood) { food in editFoodSheet(food) }
-            .onChange(of: selectedDate) { _, _ in Task { await vm.fetchAll(day: dayString, date: selectedDate) } }
         }
-        .task {
+        // task(id:) cancels the in-flight fetch when the day changes again,
+        // so a slow response for day A can't land on top of day B's list.
+        .task(id: selectedDate) {
             await vm.requestHealthKitPermission()
             await vm.fetchAll(day: dayString, date: selectedDate)
         }
