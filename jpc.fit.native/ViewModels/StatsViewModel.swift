@@ -47,7 +47,7 @@ class StatsViewModel: ObservableObject {
             let dayString = DayKey.string(from: date)
             async let foods = fetchFoodCalories(day: dayString)
             async let burned = fetchAndSyncCache(day: dayString, date: date)
-            let (f, b) = await (foods, burned)
+            let (f, b) = await (foods ?? [], burned)
             let consumed = f.reduce(0, +)
             let parts = dayString.split(separator: "/")
             let shortDay = parts.count >= 2 ? "\(parts[0])/\(parts[1])" : dayString
@@ -55,35 +55,6 @@ class StatsViewModel: ObservableObject {
         }
         weekData = results
         isLoading = false
-    }
-
-    func fetchStreak() async {
-        var days = 0
-        var net = 0
-        var offset = 0
-        let batchSize = 14
-        while true {
-            let dates = (0..<batchSize).map { Calendar.current.date(byAdding: .day, value: -(offset + $0), to: Date())! }
-            let results = await withTaskGroup(of: (Int, [Int], Int).self) { group in
-                for (i, date) in dates.enumerated() {
-                    group.addTask {
-                        let dayString = DayKey.string(from: date)
-                        async let foods = self.fetchFoodCalories(day: dayString)
-                        async let burned = self.fetchCacheBurned(day: dayString)
-                        return (i, await foods, await burned)
-                    }
-                }
-                var arr = [(Int, [Int], Int)]()
-                for await r in group { arr.append(r) }
-                return arr.sorted { $0.0 < $1.0 }
-            }
-            for (_, foods, burned) in results {
-                if foods.isEmpty { streakDays = days; streakNet = net; return }
-                days += 1
-                net += foods.reduce(0, +) - burned
-            }
-            offset += batchSize
-        }
     }
 
     nonisolated func fetchAndSyncCache(day: String, date: Date) async -> Int {
