@@ -41,17 +41,24 @@ extension FoodViewModel {
     func updateFood(id: String, name: String?, calories: Int, protein: Int?, day: String) async {
         guard let idx = foods.firstIndex(where: { $0.id == id }) else { return }
         let original = foods[idx]
-        var patched = original
+        foods[idx] = patchedFood(original, name: name, calories: calories, protein: protein)
+        didMutate(day: day)
+        let saved = await api.updateFood(id: id, name: name, calories: calories, protein: protein)
+        if !saved { rollbackUpdate(of: original, day: day) }
+    }
+
+    private func patchedFood(_ food: Food, name: String?, calories: Int, protein: Int?) -> Food {
+        var patched = food
         if let name { patched.name = name }
         patched.calories = calories
         patched.protein = protein
-        foods[idx] = patched
+        return patched
+    }
+
+    private func rollbackUpdate(of original: Food, day: String) {
+        if let i = foods.firstIndex(where: { $0.id == original.id }) { foods[i] = original }
         didMutate(day: day)
-        if await !api.updateFood(id: id, name: name, calories: calories, protein: protein) {
-            if let i = foods.firstIndex(where: { $0.id == id }) { foods[i] = original }
-            didMutate(day: day)
-            errorMessage = "Couldn't save changes to \"\(original.name ?? "Food")\" — try again."
-        }
+        errorMessage = "Couldn't save changes to \"\(original.name ?? "Food")\" — try again."
     }
 
     private func didMutate(day: String) {

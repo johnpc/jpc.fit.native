@@ -23,6 +23,14 @@ jobs:
         run: bash scripts/check_line_limit.sh
       - name: Acceptance tests in sync with .feature files
         run: python3 scripts/generate_acceptance_tests.py --check
+      - name: Dead code
+        run: python3 scripts/dead_code_check.py
+      - name: Duplicated code
+        run: python3 scripts/duplication_check.py
+      - name: Banned Any/AnyObject types
+        run: python3 scripts/banned_types_check.py
+      - name: Halstead difficulty ≤ 20
+        run: python3 scripts/halstead_check.py
 
   build:
     name: Build

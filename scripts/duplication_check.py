@@ -19,7 +19,10 @@ from collections import defaultdict
 WINDOW = 6  # consecutive significant lines that must match to count
 STRING_RE = re.compile(r'"(?:[^"\\]|\\.)*"')
 COMMENT_RE = re.compile(r"//.*$")
-BOILERPLATE = re.compile(r"^[}{)\]]*$|^import\b|^@|^(?:public |private |internal )?(?:var|let) \w+: (?:String|Int|Bool|Double)$")
+BOILERPLATE = re.compile(
+    r"^[}{)\]]*$|^import\b|^@|^(?:public |private |internal )?(?:var|let) \w+: (?:String|Int|Bool|Double)$"
+    r'|^"S",?$'  # bare string-literal data rows (e.g. quote lists) aren't copy-paste
+)
 
 
 def swift_files() -> list[str]:

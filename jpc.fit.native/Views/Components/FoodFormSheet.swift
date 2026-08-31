@@ -17,20 +17,11 @@ struct FoodFormSheet: View {
     @FocusState private var nameFieldFocused: Bool
 
     var body: some View {
-        NavigationStack {
-            Form {
-                TextField("Name", text: $name).focused($nameFieldFocused).textInputAutocapitalization(.words)
-                TextField("Calories", text: $calories).keyboardType(.numberPad)
-                if !hideProtein { TextField("Protein (g)", text: $protein).keyboardType(.numberPad) }
-            }
-            .navigationTitle(title).navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel", action: onCancel) }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(confirmLabel, action: onConfirm).disabled(confirmDisabled)
-                }
-            }
-            .onAppear { if focusName { nameFieldFocused = true } }
-        }.presentationDetents([.medium])
+        FormSheet(title: title, confirmLabel: confirmLabel, confirmDisabled: confirmDisabled,
+                  onCancel: onCancel, onConfirm: onConfirm) {
+            TextField("Name", text: $name).focused($nameFieldFocused).textInputAutocapitalization(.words)
+            CaloriesProteinFields(calories: $calories, protein: $protein, hideProtein: hideProtein)
+        }
+        .onAppear { if focusName { nameFieldFocused = true } }
     }
 }

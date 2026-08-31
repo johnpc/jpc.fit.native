@@ -69,14 +69,19 @@ class FoodViewModel: ObservableObject {
 
     private func syncHealthKit(day: String, date: Date) async {
         let stats = await healthKit.fetchStats(for: date)
-        guard stats.active > 0 || stats.basal > 0 || stats.steps > 0 else { return }
+        let hasData = stats.active > 0 || stats.basal > 0 || stats.steps > 0
+        guard hasData else { return }
+        let id = await upsertCache(stats: stats, day: day)
+        healthKitCache = HealthKitCache(id: id, activeCalories: stats.active, baseCalories: stats.basal, steps: stats.steps, day: day)
+    }
 
+    /// Update the existing cache row or create one; returns the row id.
+    private func upsertCache(stats: (active: Double, basal: Double, steps: Double), day: String) async -> String {
         if let existing = healthKitCache {
             await api.updateHealthKitCache(id: existing.id, activeCalories: stats.active, baseCalories: stats.basal, steps: stats.steps)
-            healthKitCache = HealthKitCache(id: existing.id, activeCalories: stats.active, baseCalories: stats.basal, steps: stats.steps, day: day)
-        } else {
-            let newId = await api.createHealthKitCache(activeCalories: stats.active, baseCalories: stats.basal, steps: stats.steps, day: day)
-            healthKitCache = HealthKitCache(id: newId ?? UUID().uuidString, activeCalories: stats.active, baseCalories: stats.basal, steps: stats.steps, day: day)
+            return existing.id
         }
+        let newId = await api.createHealthKitCache(activeCalories: stats.active, baseCalories: stats.basal, steps: stats.steps, day: day)
+        return newId ?? UUID().uuidString
     }
 }

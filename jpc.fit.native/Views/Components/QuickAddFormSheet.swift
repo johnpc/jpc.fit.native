@@ -15,20 +15,11 @@ struct QuickAddFormSheet: View {
     let onConfirm: () -> Void
 
     var body: some View {
-        NavigationStack {
-            Form {
-                EmojiTextField(text: $icon, placeholder: "Icon (emoji)")
-                TextField("Name", text: $name)
-                TextField("Calories", text: $calories).keyboardType(.numberPad)
-                if !hideProtein { TextField("Protein (g)", text: $protein).keyboardType(.numberPad) }
-            }
-            .navigationTitle(title).navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel", action: onCancel) }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(confirmLabel, action: onConfirm).disabled(confirmDisabled)
-                }
-            }
-        }.presentationDetents([.medium])
+        FormSheet(title: title, confirmLabel: confirmLabel, confirmDisabled: confirmDisabled,
+                  onCancel: onCancel, onConfirm: onConfirm) {
+            EmojiTextField(text: $icon, placeholder: "Icon (emoji)")
+            TextField("Name", text: $name)
+            CaloriesProteinFields(calories: $calories, protein: $protein, hideProtein: hideProtein)
+        }
     }
 }

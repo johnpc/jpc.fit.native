@@ -40,22 +40,12 @@ class WeightViewModel: ObservableObject {
     // per DynamoDB eventual consistency). On failure: toast + roll back.
     func saveWeight(_ value: String) {
         guard let val = Int(value), val > 0 else { return }
+        let optimistic = Weight(currentWeight: val, createdAt: .now())
+        weights.insert(optimistic, at: 0)
         Task {
-            let optimistic = Weight(currentWeight: val, createdAt: .now())
-            weights.insert(optimistic, at: 0)
-            let request = GraphQLRequest<JSONValue>(
-                document: "mutation CreateWeight($input: CreateWeightInput!) { createWeight(input: $input) { id } }",
-                variables: ["input": ["currentWeight": val]],
-                responseType: JSONValue.self,
-                authMode: AWSAuthorizationType.amazonCognitoUserPools)
-            do {
-                let result = try await Amplify.API.mutate(request: request)
-                if case .failure(let error) = result {
-                    showError("Weight: \(error.errorDescription)")
-                    weights.removeAll { $0.id == optimistic.id }
-                }
-            } catch {
-                showError("Weight: \(error.localizedDescription)")
+            let doc = "mutation CreateWeight($input: CreateWeightInput!) { createWeight(input: $input) { id } }"
+            if let failure = await runCreate(document: doc, input: ["currentWeight": val]) {
+                showError("Weight: \(failure)")
                 weights.removeAll { $0.id == optimistic.id }
             }
         }
@@ -63,24 +53,29 @@ class WeightViewModel: ObservableObject {
 
     func saveHeight(_ value: String) {
         guard let val = Int(value), val > 0 else { return }
+        let optimistic = Height(currentHeight: val, createdAt: .now())
+        heights.insert(optimistic, at: 0)
         Task {
-            let optimistic = Height(currentHeight: val, createdAt: .now())
-            heights.insert(optimistic, at: 0)
-            let request = GraphQLRequest<JSONValue>(
-                document: "mutation CreateHeight($input: CreateHeightInput!) { createHeight(input: $input) { id } }",
-                variables: ["input": ["currentHeight": val]],
-                responseType: JSONValue.self,
-                authMode: AWSAuthorizationType.amazonCognitoUserPools)
-            do {
-                let result = try await Amplify.API.mutate(request: request)
-                if case .failure(let error) = result {
-                    showError("Height: \(error.errorDescription)")
-                    heights.removeAll { $0.id == optimistic.id }
-                }
-            } catch {
-                showError("Height: \(error.localizedDescription)")
+            let doc = "mutation CreateHeight($input: CreateHeightInput!) { createHeight(input: $input) { id } }"
+            if let failure = await runCreate(document: doc, input: ["currentHeight": val]) {
+                showError("Height: \(failure)")
                 heights.removeAll { $0.id == optimistic.id }
             }
+        }
+    }
+
+    /// Runs a create mutation; returns a failure description or nil on success.
+    private func runCreate(document: String, input: [String: Any]) async -> String? {
+        let request = GraphQLRequest<JSONValue>(
+            document: document, variables: ["input": input], responseType: JSONValue.self,
+            authMode: AWSAuthorizationType.amazonCognitoUserPools)
+        do {
+            if case .failure(let error) = try await Amplify.API.mutate(request: request) {
+                return error.errorDescription
+            }
+            return nil
+        } catch {
+            return error.localizedDescription
         }
     }
 

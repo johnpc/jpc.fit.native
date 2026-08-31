@@ -1,58 +1,51 @@
 import Foundation
 import Amplify
 
-/// Paginated weight/height fetches for `WeightViewModel`, kept separate so the
-/// view model file stays small. Both walk `nextToken` until the list is drained.
+/// Paginated weight/height fetches for `WeightViewModel` — one generic
+/// nextToken walk parameterized by list field + row parser.
 extension WeightViewModel {
     func fetchWeights() async -> [Weight] {
-        var allItems: [Weight] = []
-        var nextToken: String? = nil
-        repeat {
-            let doc = "query ListWeights($limit: Int, $nextToken: String) { listWeights(limit: $limit, nextToken: $nextToken) { items { id currentWeight createdAt } nextToken } }"
-            var variables: [String: Any] = ["limit": 1000]
-            if let token = nextToken { variables["nextToken"] = token }
-            let request = GraphQLRequest<JSONValue>(document: doc, variables: variables, responseType: JSONValue.self)
-            do {
-                let result = try await Amplify.API.query(request: request)
-                if case .success(let json) = result {
-                    nextToken = json["listWeights"]?["nextToken"]?.stringValue
-                    if let items = json["listWeights"]?["items"]?.asArray {
-                        allItems += items.compactMap { item -> Weight? in
-                            guard let id = item["id"]?.stringValue,
-                                  let cw = item["currentWeight"]?.intValue else { return nil }
-                            let createdAt = item["createdAt"]?.stringValue ?? ""
-                            return Weight(id: id, currentWeight: cw, createdAt: try? Temporal.DateTime(iso8601String: createdAt))
-                        }
-                    }
-                } else { break }
-            } catch { break }
-        } while nextToken != nil
-        return allItems.sorted { ($0.createdAt?.foundationDate ?? .distantPast) > ($1.createdAt?.foundationDate ?? .distantPast) }
+        let doc = "query ListWeights($limit: Int, $nextToken: String) { listWeights(limit: $limit, nextToken: $nextToken) { items { id currentWeight createdAt } nextToken } }"
+        let items = await fetchAllPages(document: doc, listKey: "listWeights") { item -> Weight? in
+            guard let id = item["id"]?.stringValue,
+                  let cw = item["currentWeight"]?.intValue else { return nil }
+            return Weight(id: id, currentWeight: cw, createdAt: Self.parseDate(item))
+        }
+        return items.sorted { ($0.createdAt?.foundationDate ?? .distantPast) > ($1.createdAt?.foundationDate ?? .distantPast) }
     }
 
     func fetchHeights() async -> [Height] {
-        var allItems: [Height] = []
-        var nextToken: String? = nil
+        let doc = "query ListHeights($limit: Int, $nextToken: String) { listHeights(limit: $limit, nextToken: $nextToken) { items { id currentHeight createdAt } nextToken } }"
+        let items = await fetchAllPages(document: doc, listKey: "listHeights") { item -> Height? in
+            guard let id = item["id"]?.stringValue,
+                  let ch = item["currentHeight"]?.intValue else { return nil }
+            return Height(id: id, currentHeight: ch, createdAt: Self.parseDate(item))
+        }
+        return items.sorted { ($0.createdAt?.foundationDate ?? .distantPast) > ($1.createdAt?.foundationDate ?? .distantPast) }
+    }
+
+    static func parseDate(_ item: JSONValue) -> Temporal.DateTime? {
+        try? Temporal.DateTime(iso8601String: item["createdAt"]?.stringValue ?? "")
+    }
+
+    /// Walks `nextToken` until the list is drained, parsing each row.
+    private func fetchAllPages<T>(document: String, listKey: String, parse: (JSONValue) -> T?) async -> [T] {
+        var all: [T] = []
+        var nextToken: String?
         repeat {
-            let doc = "query ListHeights($limit: Int, $nextToken: String) { listHeights(limit: $limit, nextToken: $nextToken) { items { id currentHeight createdAt } nextToken } }"
-            var variables: [String: Any] = ["limit": 1000]
-            if let token = nextToken { variables["nextToken"] = token }
-            let request = GraphQLRequest<JSONValue>(document: doc, variables: variables, responseType: JSONValue.self)
-            do {
-                let result = try await Amplify.API.query(request: request)
-                if case .success(let json) = result {
-                    nextToken = json["listHeights"]?["nextToken"]?.stringValue
-                    if let items = json["listHeights"]?["items"]?.asArray {
-                        allItems += items.compactMap { item -> Height? in
-                            guard let id = item["id"]?.stringValue,
-                                  let ch = item["currentHeight"]?.intValue else { return nil }
-                            let createdAt = item["createdAt"]?.stringValue ?? ""
-                            return Height(id: id, currentHeight: ch, createdAt: try? Temporal.DateTime(iso8601String: createdAt))
-                        }
-                    }
-                } else { break }
-            } catch { break }
+            guard let page = await fetchPage(document: document, listKey: listKey, nextToken: nextToken) else { break }
+            nextToken = page["nextToken"]?.stringValue
+            all += (page["items"]?.asArray ?? []).compactMap(parse)
         } while nextToken != nil
-        return allItems.sorted { ($0.createdAt?.foundationDate ?? .distantPast) > ($1.createdAt?.foundationDate ?? .distantPast) }
+        return all
+    }
+
+    /// One page of a paginated list query; nil = request failed.
+    private func fetchPage(document: String, listKey: String, nextToken: String?) async -> JSONValue? {
+        var variables: [String: Any] = ["limit": 1000]
+        if let token = nextToken { variables["nextToken"] = token }
+        let request = GraphQLRequest<JSONValue>(document: document, variables: variables, responseType: JSONValue.self)
+        guard case .success(let json) = try? await Amplify.API.query(request: request) else { return nil }
+        return json[listKey]
     }
 }
