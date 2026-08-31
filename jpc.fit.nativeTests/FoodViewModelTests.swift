@@ -167,6 +167,55 @@ final class FoodViewModelTests: XCTestCase {
         XCTAssertFalse(vm.hideSteps)
     }
 
+    // MARK: - Failure Rollback
+
+    func testAddFoodRollsBackOnFailure() async {
+        let today = DayKey.today
+        await mockAPI.setFailWrites(true)
+        await vm.addFood(name: "Ghost", calories: 400, day: today)
+        XCTAssertTrue(vm.foods.isEmpty, "failed create must not leave a phantom row")
+        XCTAssertNotNil(vm.errorMessage, "failed create must surface an error")
+    }
+
+    func testDeleteFoodRestoresRowOnFailure() async {
+        let today = DayKey.today
+        let food = Food(id: "keep-1", name: "Lunch", calories: 600, day: today)
+        await mockAPI.setFoods([food])
+        await vm.fetchAll(day: today, date: Date())
+        await mockAPI.setFailWrites(true)
+
+        await vm.deleteFood(food, day: today)
+        XCTAssertEqual(vm.foods.map(\.id), ["keep-1"], "failed delete must restore the row")
+        XCTAssertNotNil(vm.errorMessage)
+    }
+
+    func testUpdateFoodRevertsOnFailure() async {
+        let today = DayKey.today
+        await mockAPI.setFoods([Food(id: "rev-1", name: "Old", calories: 100, protein: 5, day: today)])
+        await vm.fetchAll(day: today, date: Date())
+        await mockAPI.setFailWrites(true)
+
+        await vm.updateFood(id: "rev-1", name: "New", calories: 999, protein: nil, day: today)
+        XCTAssertEqual(vm.foods.first?.calories, 100, "failed update must revert to original")
+        XCTAssertEqual(vm.foods.first?.name, "Old")
+        XCTAssertEqual(vm.foods.first?.protein, 5)
+        XCTAssertNotNil(vm.errorMessage)
+    }
+
+    func testUpdateFoodClearsProtein() async {
+        // Regression: protein was only sent when non-nil, so clearing the
+        // field never persisted.
+        let today = DayKey.today
+        await mockAPI.setFoods([Food(id: "clr-1", name: "Meal", calories: 300, protein: 20, day: today)])
+        await vm.fetchAll(day: today, date: Date())
+
+        await vm.updateFood(id: "clr-1", name: nil, calories: 300, protein: nil, day: today)
+        let updated = await mockAPI.getUpdatedFoods()
+        XCTAssertEqual(updated.count, 1)
+        XCTAssertNil(updated.first?.protein)
+        XCTAssertNil(vm.foods.first?.protein, "cleared protein must clear locally too")
+    }
+
     // MARK: - Edge Cases
 
     func testEmptyFoodsReturnsZeroTotals() {

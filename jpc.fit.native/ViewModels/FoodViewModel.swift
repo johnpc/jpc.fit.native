@@ -45,6 +45,10 @@ class FoodViewModel: ObservableObject {
         async let preferencesTask = api.fetchPreferences()
 
         let (f, c, q, p) = await (foodsTask, cacheTask, quickAddsTask, preferencesTask)
+        // The owning view runs this under .task(id: selectedDate); if the user
+        // switched days again while we were in flight, drop this stale result
+        // (Amplify requests don't reliably honor Task cancellation mid-await).
+        guard !Task.isCancelled else { return }
         foods = f
         healthKitCache = c
         userQuickAdds = q

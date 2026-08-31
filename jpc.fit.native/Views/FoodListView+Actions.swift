@@ -17,7 +17,10 @@ extension FoodListView {
     }
 
     func deleteFood(at offsets: IndexSet) {
-        for i in offsets { Task { await vm.deleteFood(vm.foods[i], day: dayString) } }
+        // Resolve rows BEFORE any removal — deleting by live index while other
+        // deletes mutate `foods` targets the wrong row (or crashes).
+        let doomed = offsets.map { vm.foods[$0] }
+        Task { for food in doomed { await vm.deleteFood(food, day: dayString) } }
     }
 
     func updateFood(_ food: Food) {
