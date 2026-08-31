@@ -40,6 +40,26 @@ actor MockAPIService: APIServiceProtocol {
 
     func setPreferences(_ p: Preferences?) { preferences = p }
 
+    /// Per-day calorie lists for the Stats reads. A day key mapped to nil (or
+    /// listed in `failingDays`) simulates a failed request; an absent key is
+    /// an empty (untracked) day.
+    var dayCalories: [String: [Int]] = [:]
+    var failingDays: Set<String> = []
+    var dayBurned: [String: Int] = [:]
+
+    func setDayCalories(_ v: [String: [Int]]) { dayCalories = v }
+    func setFailingDays(_ v: Set<String>) { failingDays = v }
+    func setDayBurned(_ v: [String: Int]) { dayBurned = v }
+
+    func fetchFoodCalories(day: String) async -> [Int]? {
+        if failingDays.contains(day) { return nil }
+        return dayCalories[day] ?? []
+    }
+
+    func fetchCacheBurned(day: String) async -> Int {
+        dayBurned[day] ?? 0
+    }
+
     @discardableResult
     func createFood(name: String, calories: Int, protein: Int?, day: String) async -> String? {
         guard !failWrites else { return nil }
