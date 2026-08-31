@@ -30,16 +30,17 @@ VIEW_FILES = {
     "DatePickerSection.swift", "EmojiTextField.swift", "FoodFormSheet.swift",
     "QuickAddFormSheet.swift", "NotificationsSection.swift",
     "QuickAddsListSection.swift", "PhilosophySection.swift",
+    "StatsStreakSection.swift", "StatsBreakdownSection.swift",
     "jpc_fit_nativeApp.swift", "FoodListView+Actions.swift",
     # Services/ViewModels that call Amplify/HealthKit directly (acceptance-covered)
     "HealthKitService.swift", "PhoneConnectivityManager.swift",
     "BackgroundSyncService.swift",
     "NotificationManager.swift", "NotificationManager+Scheduling.swift",
     "APIService.swift", "APIService+Parsing.swift", "APIService+HealthKitCache.swift",
-    "APIService+Preferences.swift",
+    "APIService+Preferences.swift", "APIService+Stats.swift",
     "WeightViewModel.swift", "WeightViewModel+Fetch.swift",
-    "StatsViewModel.swift", "StatsViewModel+HealthKit.swift",
-    "StatsViewModel+Streak.swift",
+    # StatsViewModel now reads through APIServiceProtocol and is unit-covered —
+    # deliberately NOT excluded anymore.
     "SettingsViewModel.swift", "SettingsViewModel+Fetch.swift",
     "SettingsViewModel+QuickAdds.swift",
 }

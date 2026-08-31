@@ -5,6 +5,10 @@ protocol APIServiceProtocol: Sendable {
     func fetchHealthKitCache(day: String) async -> HealthKitCache?
     func fetchQuickAdds() async -> [QuickAddItem]
     func fetchPreferences() async -> Preferences?
+    /// nil = request failed (distinct from "no food that day").
+    func fetchFoodCalories(day: String) async -> [Int]?
+    /// Total burned (active+basal) from the cache row for `day`; 0 if none.
+    func fetchCacheBurned(day: String) async -> Int
     @discardableResult
     func createFood(name: String, calories: Int, protein: Int?, day: String) async -> String?
     @discardableResult

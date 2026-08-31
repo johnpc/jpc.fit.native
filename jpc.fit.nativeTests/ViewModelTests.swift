@@ -128,7 +128,7 @@ final class StatsViewModelTests: XCTestCase {
     func testWeekRangeString() {
         let formatter = DateFormatter()
         formatter.dateFormat = "M/d/yyyy"
-        vm.weekStartDate = formatter.date(from: "5/17/2026")!
+        vm.weekEndDate = formatter.date(from: "5/17/2026")!
         let range = vm.weekRangeString
         XCTAssertTrue(range.contains("5/11/2026"))
         XCTAssertTrue(range.contains("5/17/2026"))
