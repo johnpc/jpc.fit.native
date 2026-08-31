@@ -148,6 +148,25 @@ final class FoodViewModelTests: XCTestCase {
         XCTAssertEqual(updated.first?.calories, 200)
     }
 
+    // MARK: - Preferences
+
+    func testFetchAllLoadsPreferences() async {
+        // Regression: preferences were never fetched, so Hide Protein/Steps
+        // toggles in Settings had no effect on the Calories tab.
+        let today = DayKey.today
+        await mockAPI.setPreferences(Preferences(id: "p1", hideProtein: true, hideSteps: true))
+        await vm.fetchAll(day: today, date: Date())
+        XCTAssertTrue(vm.hideProtein)
+        XCTAssertTrue(vm.hideSteps)
+    }
+
+    func testHideFlagsDefaultFalseWithoutPreferences() async {
+        let today = DayKey.today
+        await vm.fetchAll(day: today, date: Date())
+        XCTAssertFalse(vm.hideProtein)
+        XCTAssertFalse(vm.hideSteps)
+    }
+
     // MARK: - Edge Cases
 
     func testEmptyFoodsReturnsZeroTotals() {
