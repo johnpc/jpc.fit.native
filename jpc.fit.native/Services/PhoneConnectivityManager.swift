@@ -18,7 +18,7 @@ class PhoneConnectivityManager: NSObject, ObservableObject {
         guard let session, session.isReachable else { return }
         
         Task {
-            let day = Date().formatted(date: .numeric, time: .omitted)
+            let day = DayKey.today
             let foods = await api.fetchFoods(day: day)
             let quickAdds = await api.fetchQuickAdds()
             let cache = await api.fetchHealthKitCache(day: day)
@@ -57,7 +57,7 @@ extension PhoneConnectivityManager: WCSessionDelegate {
     private nonisolated func handleMessage(_ message: [String: Any]) {
         Task { @MainActor in
             guard let action = message["action"] as? String else { return }
-            let day = Date().formatted(date: .numeric, time: .omitted)
+            let day = DayKey.today
             
             switch action {
             case "requestData":

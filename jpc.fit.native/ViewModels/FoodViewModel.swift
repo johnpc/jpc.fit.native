@@ -57,7 +57,7 @@ class FoodViewModel: ObservableObject {
 
     func updateWidget(day: String) {
         // Only update widget with today's data
-        let today = Date().formatted(date: .numeric, time: .omitted)
+        let today = DayKey.today
         if day == today {
             SharedDataManager.shared.save(consumed: totalCalories)
             SharedDataManager.shared.save(burned: burnedCalories)

@@ -13,7 +13,7 @@ class BackgroundSyncService {
         guard (try? await Amplify.Auth.getCurrentUser()) != nil else { return }
         
         let today = Date()
-        let dayString = today.formatted(date: .numeric, time: .omitted)
+        let dayString = DayKey.string(from: today)
         
         let stats = await fetchHealthKitStats(for: today)
         guard stats.active > 0 || stats.basal > 0 || stats.steps > 0 else { return }

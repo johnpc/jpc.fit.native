@@ -44,7 +44,7 @@ class StatsViewModel: ObservableObject {
         var results: [DayStats] = []
         for i in (0..<7).reversed() {
             let date = Calendar.current.date(byAdding: .day, value: -i, to: weekStartDate)!
-            let dayString = date.formatted(date: .numeric, time: .omitted)
+            let dayString = DayKey.string(from: date)
             async let foods = fetchFoodCalories(day: dayString)
             async let burned = fetchAndSyncCache(day: dayString, date: date)
             let (f, b) = await (foods, burned)
@@ -67,7 +67,7 @@ class StatsViewModel: ObservableObject {
             let results = await withTaskGroup(of: (Int, [Int], Int).self) { group in
                 for (i, date) in dates.enumerated() {
                     group.addTask {
-                        let dayString = date.formatted(date: .numeric, time: .omitted)
+                        let dayString = DayKey.string(from: date)
                         async let foods = self.fetchFoodCalories(day: dayString)
                         async let burned = self.fetchCacheBurned(day: dayString)
                         return (i, await foods, await burned)
