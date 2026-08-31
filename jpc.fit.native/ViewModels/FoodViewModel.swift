@@ -1,10 +1,6 @@
 import Foundation
 import WidgetKit
 
-extension Notification.Name {
-    static let foodDataChanged = Notification.Name("foodDataChanged")
-}
-
 @MainActor
 class FoodViewModel: ObservableObject {
     @Published var foods: [Food] = []

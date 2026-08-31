@@ -43,12 +43,7 @@ extension NotificationManager {
         let center = UNUserNotificationCenter.current()
         center.removeAllPendingNotificationRequests()
 
-        guard isEnabled else {
-            print("Notifications not enabled, skipping schedule")
-            return
-        }
-
-        print("Scheduling \(reminderTimes.count) notifications")
+        guard isEnabled else { return }
 
         for (i, time) in reminderTimes.enumerated() {
             let content = UNMutableNotificationContent()
@@ -59,10 +54,8 @@ extension NotificationManager {
             let trigger = UNCalendarNotificationTrigger(dateMatching: time, repeats: true)
             let request = UNNotificationRequest(identifier: "reminder-\(i)", content: content, trigger: trigger)
             center.add(request) { error in
-                if let error = error {
-                    print("Failed to schedule notification: \(error)")
-                } else {
-                    print("Scheduled notification for \(time.hour ?? 0):\(time.minute ?? 0)")
+                if let error {
+                    Log.notifications.error("Failed to schedule notification: \(error)")
                 }
             }
         }

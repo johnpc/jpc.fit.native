@@ -23,8 +23,8 @@
 		C4DB7B17D4D77C5F0665036B /* CalorieWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 772AC2455E6E3EE4796E639D /* CalorieWidget.swift */; };
 		CCF9B98E3B39BE620A5A3CC9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B77EE78D417E47A7EDEB6BE /* Foundation.framework */; };
 		E81F97FF8676EAE88CE7C2CC /* FoodViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4194BE0467D6FD2DE973FBD /* FoodViewModelTests.swift */; };
+		DA1BEEF002DA1BEEF002DA1B /* DayKeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1BEEF001DA1BEEF001DA1B /* DayKeyTests.swift */; };
 		ED5356B415C5C02A0951541A /* com.johncorser.fit.watchkitapp Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = A615C8202F2BF9D100F36993 /* com.johncorser.fit.watchkitapp Watch App.app */; };
-		FFA3F80EC025B7E08E07D721 /* DatePickerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54875060E0756520DDD8C091 /* DatePickerTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -105,7 +105,6 @@
 		07FE64B438A617B1C0C531F9 /* ModelsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ModelsTests.swift; sourceTree = "<group>"; };
 		3B77EE78D417E47A7EDEB6BE /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		407C94A290F3969B7142C63C /* jpc.fit.nativeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = jpc.fit.nativeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		54875060E0756520DDD8C091 /* DatePickerTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DatePickerTests.swift; sourceTree = "<group>"; };
 		6D18B7D69AD673F467FD03CD /* MockAPIService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MockAPIService.swift; sourceTree = "<group>"; };
 		772AC2455E6E3EE4796E639D /* CalorieWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CalorieWidget.swift; sourceTree = "<group>"; };
 		A615C8202F2BF9D100F36993 /* com.johncorser.fit.watchkitapp Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "com.johncorser.fit.watchkitapp Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -116,6 +115,7 @@
 		B0F6FBB19F57D6D67F487411 /* ViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ViewModelTests.swift; sourceTree = "<group>"; };
 		CCFEBEC96E61FFE2E5E96FB1 /* jpc.fit.widget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = jpc.fit.widget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		F4194BE0467D6FD2DE973FBD /* FoodViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FoodViewModelTests.swift; sourceTree = "<group>"; };
+		DA1BEEF001DA1BEEF001DA1B /* DayKeyTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DayKeyTests.swift; sourceTree = "<group>"; };
 		F66BD876D981F3FB810AD5AD /* jpc.fit.nativeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = jpc.fit.nativeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -283,8 +283,8 @@
 			children = (
 				262AA76D9EC6E3E8B5CD507B /* Mocks */,
 				F4194BE0467D6FD2DE973FBD /* FoodViewModelTests.swift */,
+				DA1BEEF001DA1BEEF001DA1B /* DayKeyTests.swift */,
 				07FE64B438A617B1C0C531F9 /* ModelsTests.swift */,
-				54875060E0756520DDD8C091 /* DatePickerTests.swift */,
 				B0F6FBB19F57D6D67F487411 /* ViewModelTests.swift */,
 			);
 			name = jpc.fit.nativeTests;
@@ -522,8 +522,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				E81F97FF8676EAE88CE7C2CC /* FoodViewModelTests.swift in Sources */,
+				DA1BEEF002DA1BEEF002DA1B /* DayKeyTests.swift in Sources */,
 				95E5B73E6857D33EE6EA0958 /* ModelsTests.swift in Sources */,
-				FFA3F80EC025B7E08E07D721 /* DatePickerTests.swift in Sources */,
 				B846FC9A4B12B3D4CD35EE07 /* MockAPIService.swift in Sources */,
 				B72FF9A19C8BFA838D71BF05 /* ViewModelTests.swift in Sources */,
 			);

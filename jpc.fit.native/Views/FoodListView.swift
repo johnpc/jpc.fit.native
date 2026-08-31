@@ -21,7 +21,7 @@ struct FoodListView: View {
         NavigationStack {
             List {
                 HeaderSection()
-                dateSection
+                DatePickerSection(selectedDate: $selectedDate)
                 RemainingSection(remaining: vm.remainingCalories, protein: vm.totalProtein, hideProtein: vm.hideProtein)
                 HealthKitSection(cache: vm.healthKitCache, consumed: vm.totalCalories, hideSteps: vm.hideSteps)
                 FoodSection(foods: vm.foods, isLoading: vm.isLoading, dayString: dayLabel, hideProtein: vm.hideProtein, onDelete: deleteFood, onEdit: { editingFood = $0 })
@@ -50,22 +50,6 @@ struct FoodListView: View {
             // changes from elsewhere (watch), and silently (no spinner flash).
             guard (note.object as? FoodViewModel) !== vm else { return }
             Task { await vm.fetchAll(day: dayString, date: selectedDate, showLoading: false) }
-        }
-    }
-
-    private var dateSection: some View {
-        Section {
-            HStack {
-                Button { selectedDate = Calendar.current.date(byAdding: .day, value: -1, to: selectedDate)! } label: {
-                    Image(systemName: "chevron.left").frame(width: 44, height: 44).contentShape(Rectangle())
-                }.buttonStyle(.borderless)
-                Spacer()
-                Text(dayLabel).fontWeight(.bold)
-                Spacer()
-                Button { selectedDate = Calendar.current.date(byAdding: .day, value: 1, to: selectedDate)! } label: {
-                    Image(systemName: "chevron.right").frame(width: 44, height: 44).contentShape(Rectangle())
-                }.buttonStyle(.borderless)
-            }
         }
     }
 
