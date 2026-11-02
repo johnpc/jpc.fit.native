@@ -16,7 +16,12 @@ env:
 jobs:
   lint:
     name: Source Line Limit + Gherkin Sync
-    runs-on: macos-26-xlarge
+    # Self-hosted Mac Mini. This workflow also runs on pull_request, and
+    # self-hosted runners on a public repo are unsafe for fork PRs (arbitrary
+    # code execution) -- so only run for push-to-main or a PR authored by the
+    # repo owner. Other PRs simply skip this job.
+    if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc'
+    runs-on: [self-hosted, mac-mini]
     steps:
       - uses: actions/checkout@v5
       - name: Source file line limit (≤100)
@@ -34,7 +39,12 @@ jobs:
 
   build:
     name: Build
-    runs-on: macos-26-xlarge
+    # Self-hosted Mac Mini. This workflow also runs on pull_request, and
+    # self-hosted runners on a public repo are unsafe for fork PRs (arbitrary
+    # code execution) -- so only run for push-to-main or a PR authored by the
+    # repo owner. Other PRs simply skip this job.
+    if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc'
+    runs-on: [self-hosted, mac-mini]
     steps:
       - uses: actions/checkout@v5
       - name: Build for testing
@@ -52,7 +62,12 @@ jobs:
 
   unit-tests:
     name: Unit Tests + Coverage
-    runs-on: macos-26-xlarge
+    # Self-hosted Mac Mini. This workflow also runs on pull_request, and
+    # self-hosted runners on a public repo are unsafe for fork PRs (arbitrary
+    # code execution) -- so only run for push-to-main or a PR authored by the
+    # repo owner. Other PRs simply skip this job.
+    if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc'
+    runs-on: [self-hosted, mac-mini]
     needs: build
     steps:
       - uses: actions/checkout@v5
@@ -82,7 +97,12 @@ jobs:
 
   crap-analysis:
     name: CRAP Score ≤ 30
-    runs-on: macos-26-xlarge
+    # Self-hosted Mac Mini. This workflow also runs on pull_request, and
+    # self-hosted runners on a public repo are unsafe for fork PRs (arbitrary
+    # code execution) -- so only run for push-to-main or a PR authored by the
+    # repo owner. Other PRs simply skip this job.
+    if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc'
+    runs-on: [self-hosted, mac-mini]
     needs: unit-tests
     steps:
       - uses: actions/checkout@v5
@@ -97,7 +117,12 @@ jobs:
 
   acceptance-tests:
     name: Acceptance Tests (Gherkin)
-    runs-on: macos-26-xlarge
+    # Self-hosted Mac Mini. This workflow also runs on pull_request, and
+    # self-hosted runners on a public repo are unsafe for fork PRs (arbitrary
+    # code execution) -- so only run for push-to-main or a PR authored by the
+    # repo owner. Other PRs simply skip this job.
+    if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc'
+    runs-on: [self-hosted, mac-mini]
     needs: build
     timeout-minutes: 40
     env:
@@ -154,7 +179,9 @@ jobs:
 
   deploy:
     name: Deploy to App Store Connect
-    runs-on: macos-26-xlarge
+    # Self-hosted Mac Mini. Safe here without the fork-PR gate: this job
+    # only runs on push-to-main (never pull_request) via its own condition.
+    runs-on: [self-hosted, mac-mini]
     needs: [unit-tests, crap-analysis, acceptance-tests]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
