@@ -54,11 +54,11 @@ jobs:
             -destination "$DESTINATION" \
             -derivedDataPath DerivedData \
             -quiet
-      - name: Cache DerivedData
-        uses: actions/cache/save@v5
-        with:
-          path: DerivedData
-          key: derived-data-${{ github.sha }}
+      # No cache save/restore: DerivedData already persists on disk between
+      # jobs on this self-hosted runner (same machine, same workspace) --
+      # round-tripping it through GitHub's cache service was costing a
+      # multi-GB upload/download at home-connection speed for nothing
+      # (observed costing 35+ minutes of a job that should take ~1).
 
   unit-tests:
     name: Unit Tests + Coverage
@@ -71,10 +71,6 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/cache/restore@v5
-        with:
-          path: DerivedData
-          key: derived-data-${{ github.sha }}
       - name: Run unit tests
         run: |
           xcodebuild test \
