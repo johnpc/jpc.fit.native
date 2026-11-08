@@ -10,6 +10,10 @@ permissions:
   contents: write
 
 env:
+  # Persistent build cache on the self-hosted Mac mini, outside the workspace
+  # (checkout wipes it every job): DerivedData stays warm across runs, and each
+  # run snapshots its products to products/<run_id> for the test jobs.
+  CI_CACHE: ci-cache/jpc.fit.native
   SCHEME: jpc.fit.native
   DESTINATION: "platform=iOS Simulator,name=iPhone 17 Pro"
 
@@ -22,6 +26,7 @@ jobs:
     # repo owner. Other PRs simply skip this job.
     if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc'
     runs-on: [self-hosted, mac-mini]
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
       - name: Source file line limit (≤100)
@@ -45,6 +50,7 @@ jobs:
     # repo owner. Other PRs simply skip this job.
     if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc'
     runs-on: [self-hosted, mac-mini]
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
       - name: Build for testing
@@ -52,8 +58,17 @@ jobs:
           xcodebuild build-for-testing \
             -scheme "$SCHEME" \
             -destination "$DESTINATION" \
-            -derivedDataPath DerivedData \
+            -derivedDataPath "$HOME/$CI_CACHE/DerivedData" \
+            -enableCodeCoverage YES \
             -quiet
+      - name: Snapshot this run's products for the test jobs
+        run: |
+          CACHE="$HOME/$CI_CACHE"
+          OUT="$CACHE/products/${{ github.run_id }}"
+          rm -rf "$OUT" && mkdir -p "$CACHE/products"
+          cp -Rc "$CACHE/DerivedData/Build/Products" "$OUT"   # APFS clone: instant
+          ls "$OUT"/*.xctestrun
+          ls -1dt "$CACHE"/products/* | tail -n +11 | xargs rm -rf
       # No cache save/restore: DerivedData already persists on disk between
       # jobs on this self-hosted runner (same machine, same workspace) --
       # round-tripping it through GitHub's cache service was costing a
@@ -68,15 +83,16 @@ jobs:
     # repo owner. Other PRs simply skip this job.
     if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc'
     runs-on: [self-hosted, mac-mini]
+    timeout-minutes: 30
     needs: build
     steps:
       - uses: actions/checkout@v5
       - name: Run unit tests
         run: |
-          xcodebuild test \
-            -scheme "$SCHEME" \
+          XCTESTRUN=$(ls "$HOME/$CI_CACHE/products/${{ github.run_id }}"/*.xctestrun | head -1)
+          xcodebuild test-without-building \
+            -xctestrun "$XCTESTRUN" \
             -destination "$DESTINATION" \
-            -derivedDataPath DerivedData \
             -only-testing:"jpc.fit.nativeTests" \
             -enableCodeCoverage YES \
             -resultBundlePath TestResults.xcresult \
@@ -99,6 +115,7 @@ jobs:
     # repo owner. Other PRs simply skip this job.
     if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc'
     runs-on: [self-hosted, mac-mini]
+    timeout-minutes: 30
     needs: unit-tests
     steps:
       - uses: actions/checkout@v5
@@ -130,10 +147,11 @@ jobs:
         run: python3 scripts/generate_acceptance_tests.py --check
       - name: Run acceptance tests (retry failed, then full suite)
         run: |
+          XCTESTRUN=$(ls "$HOME/$CI_CACHE/products/${{ github.run_id }}"/*.xctestrun | head -1)
           RESULT_PATH=/tmp/AcceptanceResults.xcresult
           rm -rf "$RESULT_PATH"
-          xcodebuild test \
-            -scheme "$SCHEME" \
+          xcodebuild test-without-building \
+            -xctestrun "$XCTESTRUN" \
             -destination "$DESTINATION" \
             -only-testing:"jpc.fit.nativeUITests/AcceptanceTests" \
             -resultBundlePath "$RESULT_PATH" \
@@ -158,8 +176,8 @@ jobs:
               RETRY_ARGS="$RETRY_ARGS -only-testing:$t"
             done
             sleep 5
-            xcodebuild test \
-              -scheme "$SCHEME" \
+            xcodebuild test-without-building \
+              -xctestrun "$XCTESTRUN" \
               -destination "$DESTINATION" \
               $RETRY_ARGS \
               -quiet && exit 0
@@ -167,8 +185,8 @@ jobs:
 
           echo "⚠️ Targeted retry failed, retrying full suite..."
           sleep 5
-          xcodebuild test \
-            -scheme "$SCHEME" \
+          xcodebuild test-without-building \
+            -xctestrun "$XCTESTRUN" \
             -destination "$DESTINATION" \
             -only-testing:"jpc.fit.nativeUITests/AcceptanceTests" \
             -quiet
@@ -178,6 +196,7 @@ jobs:
     # Self-hosted Mac Mini. Safe here without the fork-PR gate: this job
     # only runs on push-to-main (never pull_request) via its own condition.
     runs-on: [self-hosted, mac-mini]
+    timeout-minutes: 60
     needs: [unit-tests, crap-analysis, acceptance-tests]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
@@ -190,6 +209,16 @@ jobs:
         run: |
           BUILD_NUM=$(date +%Y%m%d%H%M)
           agvtool new-version -all $BUILD_NUM
+      - name: Prepare CI signing (manual, CI keychain)
+        env:
+          CI_KEYCHAIN_PASSWORD: ${{ secrets.CI_KEYCHAIN_PASSWORD }}
+        run: |
+          # Runner jobs run in the system launchd context, where Xcode's automatic
+          # signing can't see or write a keychain. Sign manually with the CI
+          # keychain's Apple Distribution identity (see ~/ci-signing/ios_manual_signing.py).
+          security unlock-keychain -p "$CI_KEYCHAIN_PASSWORD" "$HOME/Library/Keychains/ci-signing.keychain-db"
+          python3 ~/ci-signing/ios_manual_signing.py apply "jpc.fit.native.xcodeproj" --export-options /tmp/ExportOptions.plist
+
       - name: Archive and upload (auto-bump version on conflict)
         run: |
           upload() {
@@ -197,28 +226,8 @@ jobs:
               -scheme "$SCHEME" \
               -destination "generic/platform=iOS" \
               -archivePath ~/Desktop/jpc.fit.native.xcarchive \
-              -allowProvisioningUpdates \
-              -authenticationKeyPath ~/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8 \
-              -authenticationKeyID ${{ secrets.ASC_KEY_ID }} \
-              -authenticationKeyIssuerID ${{ secrets.ASC_ISSUER_ID }} \
               -quiet
 
-            cat > /tmp/ExportOptions.plist << 'PLIST'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>method</key>
-              <string>app-store-connect</string>
-              <key>destination</key>
-              <string>upload</string>
-              <key>signingStyle</key>
-              <string>automatic</string>
-              <key>teamID</key>
-              <string>${{ secrets.TEAM_ID }}</string>
-          </dict>
-          </plist>
-          PLIST
 
             xcodebuild -exportArchive \
               -archivePath ~/Desktop/jpc.fit.native.xcarchive \
@@ -234,6 +243,7 @@ jobs:
 
           if echo "$OUTPUT" | grep -qi "version.*already exists\|already been uploaded\|redundant binary\|train.*closed\|higher version"; then
             echo "⚠️ Version conflict detected, bumping minor version..."
+            python3 ~/ci-signing/ios_manual_signing.py revert "jpc.fit.native.xcodeproj"
             CURRENT=$(grep 'MARKETING_VERSION' jpc.fit.native.xcodeproj/project.pbxproj | head -1 | sed 's/.*= *\(.*\);/\1/')
             MAJOR=$(echo "$CURRENT" | cut -d. -f1)
             MINOR=$(echo "$CURRENT" | cut -d. -f2)
@@ -246,6 +256,7 @@ jobs:
             git add -A
             git commit -m "Bump version to $NEW_VERSION [skip ci]"
             git push
+            python3 ~/ci-signing/ios_manual_signing.py apply "jpc.fit.native.xcodeproj" --export-options /tmp/ExportOptions.plist
 
             rm -rf ~/Desktop/jpc.fit.native.xcarchive
             OUTPUT=$(upload)
@@ -254,3 +265,7 @@ jobs:
             echo "$OUTPUT"
             exit 1
           fi
+
+      - name: Revert CI signing
+        if: always()
+        run: python3 ~/ci-signing/ios_manual_signing.py revert "jpc.fit.native.xcodeproj"
