@@ -620,7 +620,7 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = jpc.fit.widget/jpc.fit.widget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 202605172155;
+				CURRENT_PROJECT_VERSION = 202611080015;
 				DEVELOPMENT_TEAM = JW5SC3NYUV;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = jpc.fit.widget/Info.plist;
@@ -632,7 +632,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.3;
+				MARKETING_VERSION = 2.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.johncorser.fit.JpcFitWidget;
 				PRODUCT_NAME = jpc.fit.widget;
 				SDKROOT = iphoneos;
@@ -703,7 +703,7 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = jpc.fit.widget/jpc.fit.widget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 202605172155;
+				CURRENT_PROJECT_VERSION = 202611080015;
 				DEVELOPMENT_TEAM = JW5SC3NYUV;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = jpc.fit.widget/Info.plist;
@@ -715,7 +715,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 2.3;
+				MARKETING_VERSION = 2.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.johncorser.fit.JpcFitWidget;
 				PRODUCT_NAME = jpc.fit.widget;
 				SDKROOT = iphoneos;
@@ -732,7 +732,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "com.johncorser.fit.watchkitapp Watch App/com.johncorser.fit.watchkitapp Watch App.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 202605172155;
+				CURRENT_PROJECT_VERSION = 202611080015;
 				DEVELOPMENT_TEAM = JW5SC3NYUV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -745,7 +745,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.3;
+				MARKETING_VERSION = 2.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.johncorser.fit.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -768,7 +768,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "com.johncorser.fit.watchkitapp Watch App/com.johncorser.fit.watchkitapp Watch App.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 202605172155;
+				CURRENT_PROJECT_VERSION = 202611080015;
 				DEVELOPMENT_TEAM = JW5SC3NYUV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -781,7 +781,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.3;
+				MARKETING_VERSION = 2.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.johncorser.fit.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -804,7 +804,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = com.johncorser.fit.watchkitapp/com.johncorser.fit.watchkitapp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 202605172155;
+				CURRENT_PROJECT_VERSION = 202611080015;
 				DEVELOPMENT_TEAM = JW5SC3NYUV;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = com.johncorser.fit.watchkitapp/Info.plist;
@@ -816,7 +816,7 @@
 					"@executable_path/../../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 2.3;
+				MARKETING_VERSION = 2.4;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.johncorser.fit.watchkitapp.com-johncorser-fit-watchkitapp";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -838,7 +838,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = com.johncorser.fit.watchkitapp/com.johncorser.fit.watchkitapp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 202605172155;
+				CURRENT_PROJECT_VERSION = 202611080015;
 				DEVELOPMENT_TEAM = JW5SC3NYUV;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = com.johncorser.fit.watchkitapp/Info.plist;
@@ -850,7 +850,7 @@
 					"@executable_path/../../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MARKETING_VERSION = 2.3;
+				MARKETING_VERSION = 2.4;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.johncorser.fit.watchkitapp.com-johncorser-fit-watchkitapp";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -993,7 +993,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = jpc.fit.native/jpc.fit.native.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 202605172155;
+				CURRENT_PROJECT_VERSION = 202611080015;
 				DEVELOPMENT_TEAM = JW5SC3NYUV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1011,7 +1011,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.3;
+				MARKETING_VERSION = 2.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.johncorser.fit;
 				PRODUCT_NAME = jpc.fit;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -1028,7 +1028,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = jpc.fit.native/jpc.fit.native.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 202605172155;
+				CURRENT_PROJECT_VERSION = 202611080015;
 				DEVELOPMENT_TEAM = JW5SC3NYUV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1046,7 +1046,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.3;
+				MARKETING_VERSION = 2.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.johncorser.fit;
 				PRODUCT_NAME = jpc.fit;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
