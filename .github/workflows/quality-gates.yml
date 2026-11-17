@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 env:
   # Persistent build cache on the self-hosted Mac mini, outside the workspace
@@ -195,6 +196,8 @@ jobs:
           python3 ~/ci-signing/ios_manual_signing.py apply "jpc.fit.native.xcodeproj" --export-options /tmp/ExportOptions.plist
 
       - name: Archive and upload (auto-bump version on conflict)
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           upload() {
             xcodebuild archive \
@@ -226,16 +229,28 @@ jobs:
             sed -i '' "s/MARKETING_VERSION = ${CURRENT}/MARKETING_VERSION = ${NEW_VERSION}/g" jpc.fit.native.xcodeproj/project.pbxproj
             echo "Bumped $CURRENT → $NEW_VERSION"
 
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add -A
-            git commit -m "Bump version to $NEW_VERSION [skip ci]"
-            git push
+            # Upload the bumped build FIRST, so a rejected push can never
+            # leave the store without a build.
             python3 ~/ci-signing/ios_manual_signing.py apply "jpc.fit.native.xcodeproj" --export-options /tmp/ExportOptions.plist
-
             rm -rf ~/Desktop/jpc.fit.native.xcarchive
             OUTPUT=$(upload)
             echo "$OUTPUT"
+
+            # Persist the bump. main is protected (required checks), so the
+            # bot cannot push to it directly: open a PR and let it auto-merge
+            # once the gates pass. No [skip ci] — the checks must run.
+            python3 ~/ci-signing/ios_manual_signing.py revert "jpc.fit.native.xcodeproj"
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            BRANCH="ci/bump-version-${NEW_VERSION}"
+            git checkout -b "$BRANCH"
+            git add -A
+            git commit -m "chore(release): bump version to $NEW_VERSION"
+            git push -u origin "$BRANCH"
+            gh pr create --base main --head "$BRANCH" \
+              --title "chore(release): bump version to $NEW_VERSION" \
+              --body "Automated by the App Store Connect deploy job: $CURRENT already exists in App Store Connect, so build $BUILD_NUM was uploaded as $NEW_VERSION. This PR records that bump."
+            gh pr merge "$BRANCH" --auto --squash --delete-branch
           else
             echo "$OUTPUT"
             exit 1
