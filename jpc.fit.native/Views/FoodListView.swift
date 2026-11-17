@@ -1,16 +1,12 @@
 import SwiftUI
-import Amplify
 
 struct FoodListView: View {
-    let user: AuthUser
     // Internal (not private) so FoodListView+Actions can reach them.
     @StateObject var vm = FoodViewModel()
     @State var selectedDate = Date()
-    @State var showingAddFood = false
-    @State var editingFood: Food?
-    @State var newFoodName = ""
-    @State var newFoodCalories = ""
-    @State var newFoodProtein = ""
+    /// Which sheet is up (add / edit) — see `FoodSheet`.
+    @State var sheet: FoodSheet?
+    @State var draft = FoodDraft()
 
     /// Backend partition key — locale-stable, never shown to the user.
     var dayString: String { DayKey.string(from: selectedDate) }
@@ -24,20 +20,19 @@ struct FoodListView: View {
                 DatePickerSection(selectedDate: $selectedDate)
                 RemainingSection(remaining: vm.remainingCalories, protein: vm.totalProtein, hideProtein: vm.hideProtein)
                 HealthKitSection(cache: vm.healthKitCache, consumed: vm.totalCalories, hideSteps: vm.hideSteps)
-                FoodSection(foods: vm.foods, isLoading: vm.isLoading, dayString: dayLabel, hideProtein: vm.hideProtein, onDelete: deleteFood, onEdit: { editingFood = $0 })
-                QuickAddSection(quickAdds: vm.quickAdds, onQuickAdd: addQuickFood, onCustomAdd: { showingAddFood = true })
+                FoodSection(state: vm.listState, dayString: dayLabel, hideProtein: vm.hideProtein,
+                            onDelete: deleteFood, onEdit: { open(.edit($0)) })
+                QuickAddSection(quickAdds: vm.quickAdds, onQuickAdd: addQuickFood, onCustomAdd: { open(.add) })
                 ErrorSection(error: vm.errorMessage)
             }
             .navigationBarTitleDisplayMode(.inline)
             .refreshable { await vm.fetchAll(day: dayString, date: selectedDate) }
-            .sheet(isPresented: $showingAddFood) {
-                FoodFormSheet(title: "Add Food", name: $newFoodName, calories: $newFoodCalories,
-                              protein: $newFoodProtein, hideProtein: vm.hideProtein, focusName: true,
-                              confirmLabel: "Add", confirmDisabled: newFoodCalories.isEmpty,
-                              onCancel: { showingAddFood = false; clearForm() },
-                              onConfirm: { addCustomFood(); showingAddFood = false })
+            .sheet(item: $sheet) { sheet in
+                FoodFormSheet(title: sheet.title, name: $draft.name, calories: $draft.calories,
+                              protein: $draft.protein, hideProtein: vm.hideProtein, focusName: sheet.focusesName,
+                              confirmLabel: sheet.confirmLabel, confirmDisabled: !draft.isValid,
+                              onCancel: close, onConfirm: { confirm(sheet) })
             }
-            .sheet(item: $editingFood) { food in editFoodSheet(food) }
         }
         // task(id:) cancels the in-flight fetch when the day changes again,
         // so a slow response for day A can't land on top of day B's list.
@@ -52,14 +47,4 @@ struct FoodListView: View {
             Task { await vm.fetchAll(day: dayString, date: selectedDate, showLoading: false) }
         }
     }
-
-    private func editFoodSheet(_ food: Food) -> some View {
-        FoodFormSheet(title: "Edit Food", name: $newFoodName, calories: $newFoodCalories,
-                      protein: $newFoodProtein, hideProtein: vm.hideProtein, focusName: false,
-                      confirmLabel: "Save", confirmDisabled: false,
-                      onCancel: { editingFood = nil; clearForm() },
-                      onConfirm: { updateFood(food); editingFood = nil })
-            .onAppear { newFoodName = food.name ?? ""; newFoodCalories = "\(food.calories)"; newFoodProtein = food.protein.map { "\($0)" } ?? "" }
-    }
-
 }

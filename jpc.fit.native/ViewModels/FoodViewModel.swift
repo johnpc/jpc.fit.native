@@ -6,15 +6,16 @@ class FoodViewModel: ObservableObject {
     @Published var foods: [Food] = []
     @Published var healthKitCache: HealthKitCache?
     @Published var userQuickAdds: [QuickAddItem] = []
-    @Published var isLoading = true
+    @Published private(set) var isLoading = true
     @Published var errorMessage: String?
-    @Published var preferences: Preferences?
+    @Published private(set) var preferences: PreferencesRecord = .unknown
 
     let api: APIServiceProtocol
-    private let healthKit = HealthKitService.shared
+    private let healthKit: HealthStatsProviding
 
-    init(api: APIServiceProtocol = APIService.shared) {
+    init(api: APIServiceProtocol = AppServices.api, healthKit: HealthStatsProviding = AppServices.health) {
         self.api = api
+        self.healthKit = healthKit
     }
 
     var totalCalories: Int { foods.reduce(0) { $0 + $1.calories } }
@@ -22,8 +23,14 @@ class FoodViewModel: ObservableObject {
     var burnedCalories: Int { Int(healthKitCache?.activeCalories ?? 0) + Int(healthKitCache?.baseCalories ?? 0) }
     var remainingCalories: Int { burnedCalories - totalCalories }
     var quickAdds: [QuickAddItem] { userQuickAdds.isEmpty ? defaultQuickAdds : userQuickAdds }
-    var hideProtein: Bool { preferences?.hideProtein ?? false }
-    var hideSteps: Bool { preferences?.hideSteps ?? false }
+    var hideProtein: Bool { preferences.hideProtein }
+    var hideSteps: Bool { preferences.hideSteps }
+
+    /// What the list renders — derived from the one loading flag + the rows.
+    var listState: FoodListState {
+        if isLoading { return .loading }
+        return foods.isEmpty ? .empty : .rows(foods)
+    }
 
     func requestHealthKitPermission() async {
         await healthKit.requestAuthorization()

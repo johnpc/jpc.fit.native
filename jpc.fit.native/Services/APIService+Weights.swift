@@ -1,14 +1,14 @@
 import Foundation
 import Amplify
+import AWSPluginsCore
 
-/// Paginated weight/height fetches for `WeightViewModel` — one generic
-/// nextToken walk parameterized by list field + row parser.
-extension WeightViewModel {
+/// Weight/height history for `APIService`: paginated reads (one generic
+/// nextToken walk parameterized by list field + row parser) and creates.
+extension APIService {
     func fetchWeights() async -> [Weight] {
         let doc = "query ListWeights($limit: Int, $nextToken: String) { listWeights(limit: $limit, nextToken: $nextToken) { items { id currentWeight createdAt } nextToken } }"
         let items = await fetchAllPages(document: doc, listKey: "listWeights") { item -> Weight? in
-            guard let id = item["id"]?.stringValue,
-                  let cw = item["currentWeight"]?.intValue else { return nil }
+            guard let id = item["id"]?.stringValue, let cw = item["currentWeight"]?.intValue else { return nil }
             return Weight(id: id, currentWeight: cw, createdAt: Self.parseDate(item))
         }
         return items.sorted { ($0.createdAt?.foundationDate ?? .distantPast) > ($1.createdAt?.foundationDate ?? .distantPast) }
@@ -17,14 +17,28 @@ extension WeightViewModel {
     func fetchHeights() async -> [Height] {
         let doc = "query ListHeights($limit: Int, $nextToken: String) { listHeights(limit: $limit, nextToken: $nextToken) { items { id currentHeight createdAt } nextToken } }"
         let items = await fetchAllPages(document: doc, listKey: "listHeights") { item -> Height? in
-            guard let id = item["id"]?.stringValue,
-                  let ch = item["currentHeight"]?.intValue else { return nil }
+            guard let id = item["id"]?.stringValue, let ch = item["currentHeight"]?.intValue else { return nil }
             return Height(id: id, currentHeight: ch, createdAt: Self.parseDate(item))
         }
         return items.sorted { ($0.createdAt?.foundationDate ?? .distantPast) > ($1.createdAt?.foundationDate ?? .distantPast) }
     }
 
-    static func parseDate(_ item: JSONValue) -> Temporal.DateTime? {
+    func createWeight(_ pounds: Int) async -> WriteOutcome {
+        let doc = "mutation CreateWeight($input: CreateWeightInput!) { createWeight(input: $input) { id } }"
+        return await createOutcome(userPoolRequest(doc, input: ["currentWeight": pounds]), at: "createWeight.id")
+    }
+
+    func createHeight(_ inches: Int) async -> WriteOutcome {
+        let doc = "mutation CreateHeight($input: CreateHeightInput!) { createHeight(input: $input) { id } }"
+        return await createOutcome(userPoolRequest(doc, input: ["currentHeight": inches]), at: "createHeight.id")
+    }
+
+    private func userPoolRequest(_ document: String, input: [String: Any]) -> GraphQLRequest<JSONValue> {
+        GraphQLRequest<JSONValue>(document: document, variables: ["input": input], responseType: JSONValue.self,
+                                  authMode: AWSAuthorizationType.amazonCognitoUserPools)
+    }
+
+    private static func parseDate(_ item: JSONValue) -> Temporal.DateTime? {
         try? Temporal.DateTime(iso8601String: item["createdAt"]?.stringValue ?? "")
     }
 

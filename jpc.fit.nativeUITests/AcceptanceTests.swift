@@ -10,13 +10,15 @@ import XCTest
 ///
 /// Why generated concrete methods instead of a fully dynamic suite: XCTest's
 /// `-only-testing` filtering and crash-recovery both work by selector name, so
-/// real methods are required for CI's targeted retry and for clean crash
-/// recovery. The `.feature` files remain the only thing an author edits; the
-/// generated file is mechanical and kept in sync by a quality gate.
+/// real methods are required for clean crash recovery. The `.feature` files
+/// remain the only thing an author edits; the generated file is mechanical and
+/// kept in sync by a quality gate.
 ///
-/// These are real end-to-end tests against the live backend: sign-in uses the
-/// `TEST_EMAIL` / `TEST_PASSWORD` credentials (read from the environment or a
-/// local `.env`), exposed to steps via `GherkinWorld`.
+/// Backend: by default every scenario launches the app in DEMO mode — the
+/// in-process fake backend (`DemoAPIService`), zero network, deterministic seed
+/// — so the suite passes identically on a laptop, the Mac mini and CI. Set
+/// `FIT_E2E_BACKEND=live` (plus `TEST_EMAIL` / `TEST_PASSWORD`) to drive the
+/// same scenarios against the real Cognito + AppSync backend by hand.
 final class AcceptanceTests: XCTestCase {
 
     /// Parse the named bundled feature file, find the scenario, and run its steps.
@@ -24,24 +26,23 @@ final class AcceptanceTests: XCTestCase {
                      file: StaticString = #file, line: UInt = #line) throws {
         continueAfterFailure = false
 
-        let email = ProcessInfo.processInfo.environment["TEST_EMAIL"] ?? Self.loadEnv("TEST_EMAIL")
-        let password = ProcessInfo.processInfo.environment["TEST_PASSWORD"] ?? Self.loadEnv("TEST_PASSWORD")
-        guard let email, let password else {
-            throw XCTSkip("TEST_EMAIL and TEST_PASSWORD required for acceptance tests")
-        }
-
         guard let scenario = Self.scenario(named: name, inFeature: fileName) else {
             XCTFail("Scenario “\(name)” not found in \(fileName) — regenerate with scripts/generate_acceptance_tests.py",
                     file: file, line: line)
             return
         }
 
+        let backend = try E2EBackend.fromEnvironment()
+        if scenario.tags.contains("@demo-data"), case .live = backend {
+            // Asserts on the demo seed's exact numbers; meaningless against a
+            // real account. Never skipped in CI, which always runs demo.
+            throw XCTSkip("“\(name)” asserts on demo-seed data; FIT_E2E_BACKEND=live has none")
+        }
         let app = XCUIApplication()
+        app.launchArguments += backend.launchArguments
         app.launch()
 
-        let world = GherkinWorld(app: app)
-        world.email = email
-        world.password = password
+        let world = GherkinWorld(app: app, backend: backend)
         let registry = StepDefinitions.makeRegistry()
 
         for step in scenario.steps {
@@ -71,25 +72,5 @@ final class AcceptanceTests: XCTestCase {
         guard let url, let contents = try? String(contentsOf: url, encoding: .utf8),
               let feature = GherkinParser.parse(contents) else { return nil }
         return feature.scenarios.first { $0.name == name }
-    }
-
-    /// Read a key from a local `.env` file (used when the value isn't in the
-    /// process environment, e.g. running from Xcode rather than CI).
-    private static func loadEnv(_ key: String) -> String? {
-        let paths = [
-            ProcessInfo.processInfo.environment["PROJECT_DIR"].map { "\($0)/.env" },
-            FileManager.default.currentDirectoryPath + "/.env",
-        ].compactMap { $0 }
-
-        for envPath in paths {
-            guard let content = try? String(contentsOfFile: envPath, encoding: .utf8) else { continue }
-            for line in content.components(separatedBy: .newlines) {
-                let parts = line.split(separator: "=", maxSplits: 1)
-                if parts.count == 2, String(parts[0]) == key {
-                    return String(parts[1]).trimmingCharacters(in: .whitespaces)
-                }
-            }
-        }
-        return nil
     }
 }

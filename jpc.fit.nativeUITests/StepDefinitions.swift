@@ -4,15 +4,13 @@ import XCTest
 /// actions/assertions. Keywords are interchangeable at match time, so each step
 /// is registered once regardless of whether specs phrase it as Given/When/Then.
 ///
-/// These port the assertions from the original hand-written acceptance suite
-/// (`AcceptanceTests`/`DateNavigationUITests`). The app talks to the live
-/// backend, so navigation/empty-state flows are asserted strictly while content
-/// that depends on the network is tolerant (accepts a nav bar / any content).
+/// Every wait is a real condition (`waitForExistence`, an expectation on the
+/// element) — never a sleep. Every assertion is strict: the suite runs against
+/// the deterministic demo backend, so there is nothing to be tolerant about.
 enum StepDefinitions {
 
-    private static let short: TimeInterval = 5
-    private static let medium: TimeInterval = 10
-    private static let long: TimeInterval = 20
+    static let medium: TimeInterval = 10
+    static let long: TimeInterval = 20
 
     static func makeRegistry() -> StepRegistry {
         let r = StepRegistry()
@@ -21,6 +19,12 @@ enum StepDefinitions {
         r.define("the app is launched") { _ in }
         r.define("I sign in with valid credentials") { w in signIn(w) }
         r.define("I am signed in") { w in signIn(w) }
+        r.define("I tap Sign In without entering credentials") { w in
+            tap(w.app.buttons["Sign In"], "Sign In button")
+        }
+        r.define("I should see the sign-in screen") { w in
+            XCTAssertTrue(w.app.textFields["Email"].waitForExistence(timeout: long), "Email field should be shown")
+        }
 
         // MARK: Tabs
         r.define("I should see the Calories tab") { w in
@@ -32,96 +36,99 @@ enum StepDefinitions {
                 XCTAssertTrue(w.app.tabBars.buttons[tab].waitForExistence(timeout: medium), "\(tab) tab should exist")
             }
         }
-        r.define("I am on the Calories tab") { w in w.app.tabBars.buttons["Calories"].tap() }
-        r.define("I tap the (\\w+) tab") { w in w.app.tabBars.buttons[w.capture()].tap() }
+        r.define("I am on the Calories tab") { w in tap(w.app.tabBars.buttons["Calories"], "Calories tab") }
+        r.define("I tap the (\\w+) tab") { w in tap(w.app.tabBars.buttons[w.capture()], "\(w.capture()) tab") }
 
-        // MARK: Calories
-        r.define("I should see the date navigation") { w in
-            XCTAssertTrue(w.app.buttons["Back"].waitForExistence(timeout: medium),
-                          "Date navigation back button should be present")
+        // MARK: Generic
+        r.define("I should see \"(.+)\"") { w in
+            XCTAssertTrue(reveal(w.app.staticTexts[w.capture()], in: w.app), "Expected text “\(w.capture())”")
         }
-        r.define("I should see the remaining calories section") { w in
-            XCTAssertTrue(w.app.staticTexts["Remaining"].waitForExistence(timeout: medium),
-                          "Remaining calories section should be shown")
+        r.define("I should see the \"(.+)\" button") { w in
+            XCTAssertTrue(reveal(w.app.buttons[w.capture()], in: w.app), "Expected button “\(w.capture())”")
         }
-        r.define("I tap the back button") { w in
-            let back = w.app.buttons["Back"]
-            XCTAssertTrue(back.waitForExistence(timeout: medium), "Back button should exist")
-            back.tap()
-        }
-        r.define("the date should change to yesterday") { w in
-            let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()
-            let label = yesterday.formatted(date: .numeric, time: .omitted)
-            XCTAssertTrue(w.app.staticTexts[label].waitForExistence(timeout: medium),
-                          "Date should change to yesterday: \(label)")
-        }
+        r.define("I tap the \"(.+)\" button") { w in tap(w.app.buttons[w.capture()], "\(w.capture()) button") }
 
-        // MARK: Weight
-        r.define("I should see the weight tracking view") { w in
-            XCTAssertTrue(w.app.navigationBars["Weight"].waitForExistence(timeout: medium)
-                            || w.app.collectionViews.firstMatch.waitForExistence(timeout: short)
-                            || w.app.staticTexts.firstMatch.waitForExistence(timeout: short),
-                          "Weight tab should load")
-        }
-
-        // MARK: Stats
-        r.define("I should see my weekly stats") { w in
-            XCTAssertTrue(w.app.navigationBars["Stats"].waitForExistence(timeout: medium)
-                            || w.app.staticTexts.firstMatch.waitForExistence(timeout: short),
-                          "Stats tab should load")
-        }
-
-        // MARK: Quotes
-        r.define("I should see motivational content") { w in
-            XCTAssertTrue(w.app.buttons["Randomize Quote"].waitForExistence(timeout: medium)
-                            || w.app.staticTexts.firstMatch.waitForExistence(timeout: short),
-                          "Quotes tab should show motivational content")
-        }
-
-        // MARK: Settings
-        r.define("I should see the settings view") { w in
-            XCTAssertTrue(w.app.navigationBars["Settings"].waitForExistence(timeout: medium)
-                            || w.app.staticTexts.firstMatch.waitForExistence(timeout: short),
-                          "Settings tab should load")
-        }
-        r.define("I should see a sign out button") { w in
-            XCTAssertTrue(w.app.buttons["Sign Out"].waitForExistence(timeout: medium),
-                          "Settings should have a Sign Out button")
-        }
-
+        CaloriesSteps.register(in: r)
+        WeightSteps.register(in: r)
         return r
     }
 
     // MARK: - Helpers
 
-    /// Sign in (if not already signed in) and dismiss the HealthKit permission
-    /// sheet, leaving the app on the tab bar.
+    /// Lists and grids are lazy: a row below the fold is not in the hierarchy
+    /// at all. Look for the element where we are, then page down, then back
+    /// up — each probe is a bounded `waitForExistence`, never a sleep.
+    @discardableResult
+    static func reveal(_ element: XCUIElement, in app: XCUIApplication) -> Bool {
+        if element.waitForExistence(timeout: medium) && element.isHittable { return true }
+        for _ in 0..<3 {
+            app.swipeUp()
+            if element.waitForExistence(timeout: 1) && element.isHittable { return true }
+        }
+        for _ in 0..<6 {
+            app.swipeDown()
+            if element.waitForExistence(timeout: 1) && element.isHittable { return true }
+        }
+        return element.exists
+    }
+
+    /// Reveal the element (scrolling if the list has it off screen), then tap.
+    static func tap(_ element: XCUIElement, _ what: String) {
+        XCTAssertTrue(reveal(element, in: XCUIApplication()), "\(what) should exist")
+        element.tap()
+    }
+
+    /// Sign in (if not already signed in) and, on the live backend only,
+    /// grant the HealthKit permission sheet — leaving the app on the tab bar.
     private static func signIn(_ w: GherkinWorld) {
         let emailField = w.app.textFields["Email"]
         if emailField.waitForExistence(timeout: medium) {
-            emailField.tap()
-            emailField.typeText(w.email)
-            let passwordField = w.app.secureTextFields["Password"]
-            passwordField.tap()
-            passwordField.typeText(w.password)
+            type(w.email, into: emailField)
+            type(w.password, into: passwordField(in: w.app))
             w.app.buttons["Sign In"].firstMatch.tap()
         }
-        dismissHealthKitPrompt(w)
+        if w.backend.showsHealthKitPrompt { dismissHealthKitPrompt(w) }
         XCTAssertTrue(w.app.tabBars.firstMatch.waitForExistence(timeout: long),
                       "Tab bar should appear after login")
     }
 
-    /// The first launch shows a HealthKit authorization sheet; grant it so the
-    /// app proceeds to its main UI.
+    /// Typing into a field that has not yet taken keyboard focus is the
+    /// classic XCUITest race ("Neither element nor any descendant has keyboard
+    /// focus"). Tap, then WAIT for focus — and if the tap was swallowed by a
+    /// layout/transition animation (observed: focus never arrives), tap once
+    /// more and log it, so the rate stays visible.
+    static func type(_ text: String, into field: XCUIElement) {
+        XCTAssertTrue(field.waitForExistence(timeout: medium), "field should exist before typing")
+        field.tap()
+        if !waitForKeyboardFocus(field) {
+            NSLog("[harness] tap on \(field) did not focus it; tapping again")
+            field.tap()
+            XCTAssertTrue(waitForKeyboardFocus(field), "field never took keyboard focus")
+        }
+        field.typeText(text)
+    }
+
+    private static func waitForKeyboardFocus(_ field: XCUIElement) -> Bool {
+        let focused = XCTNSPredicateExpectation(predicate: NSPredicate(format: "hasKeyboardFocus == true"), object: field)
+        return XCTWaiter().wait(for: [focused], timeout: medium) == .completed
+    }
+
+    /// Amplify's Authenticator uses a secure field; the demo form a plain one
+    /// (a secure field makes iOS offer to save the fake password).
+    static func passwordField(in app: XCUIApplication) -> XCUIElement {
+        let secure = app.secureTextFields["Password"]
+        return secure.exists ? secure : app.textFields["Password"]
+    }
+
+    /// The live app's first launch shows a HealthKit authorization sheet;
+    /// grant it so the app proceeds to its main UI.
     private static func dismissHealthKitPrompt(_ w: GherkinWorld) {
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let turnOnAll = springboard.buttons["Turn On All"]
-        if turnOnAll.waitForExistence(timeout: short) {
+        if turnOnAll.waitForExistence(timeout: medium) {
             turnOnAll.tap()
             let allow = springboard.buttons["Allow"]
-            if allow.waitForExistence(timeout: short) { allow.tap() }
+            if allow.waitForExistence(timeout: medium) { allow.tap() }
         }
-        let inApp = w.app.buttons["Turn On All"]
-        if inApp.waitForExistence(timeout: short) { inApp.tap() }
     }
 }

@@ -37,8 +37,9 @@ extension StatsViewModel {
                     finishStreak(days: days, net: net)
                     return
                 case .requestFailed:
-                    // Leave the last known value on screen rather than
-                    // reporting a false 0.
+                    // Keep the last known value on screen rather than a false
+                    // 0; a never-computed streak becomes "unavailable".
+                    streak = streak.afterFailure()
                     return
                 }
             }
@@ -59,8 +60,7 @@ extension StatsViewModel {
     }
 
     private func finishStreak(days: Int, net: Int) {
-        streakDays = min(days, Self.streakCap)
-        streakNet = net
+        streak = .known(days: min(days, Self.streakCap), net: net)
     }
 
     /// Fetches 14 consecutive days concurrently, returned in walk order.

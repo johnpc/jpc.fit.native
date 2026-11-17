@@ -1,6 +1,6 @@
 # jpc.fit.native
 
-A native iOS health and calorie tracker (SwiftUI, iOS 26+). Tabs for **Calories**,
+A native iOS health and calorie tracker (SwiftUI, iOS 17+). Tabs for **Calories**,
 **Weight**, **Stats**, **Quotes**, and **Settings**, backed by AWS Amplify
 (Cognito auth + AppSync GraphQL) with HealthKit integration, a Watch app, and a
 home-screen widget.
@@ -45,12 +45,19 @@ tests, just enough for the scenario, nothing speculative.
 
 ## Stack
 
-- **Client:** SwiftUI, iOS 26+, Swift 5.
+- **Client:** SwiftUI, iOS 17+ (deployment target), Swift 5.
 - **Backend:** AWS Amplify — Cognito (auth, via the Authenticator UI) and AppSync
   GraphQL (foods, weights, heights, quick adds, preferences, HealthKit cache).
-- **Health:** HealthKit for active/basal calories and steps.
+  **Demo mode** (`--demo` launch argument) swaps in the in-process fake backend
+  (`Services/Demo/`, `Core/DemoSession`) — no network, no account; it is what
+  the acceptance suite and CI run on. See README "Demo mode".
+- **Health:** HealthKit for active/basal calories and steps (behind
+  `HealthStatsProviding`; demo mode returns fixed numbers, no prompt).
 - **Tests:** XCTest unit tests (`jpc.fit.nativeTests`, with `MockAPIService`) +
-  Gherkin acceptance tests (`jpc.fit.nativeUITests`).
+  Gherkin acceptance tests (`jpc.fit.nativeUITests`, demo backend).
+- **Operating manual:** [AGENTS.md](AGENTS.md) — no flaky tests, one owner per
+  state machine ([docs/state-machines.md](docs/state-machines.md)), the fake
+  backend, verification on the Mac mini.
 
 ## Architecture (the one mental model that matters)
 
@@ -59,10 +66,17 @@ tests, just enough for the scenario, nothing speculative.
 - **ViewModels own state + side effects.** `FoodViewModel`, `WeightViewModel`,
   `StatsViewModel`, `SettingsViewModel` are `@MainActor ObservableObject`s. They
   talk to the API through `APIServiceProtocol` so they're testable against
-  `MockAPIService`.
+  `MockAPIService`. Dependencies default from `Core/AppServices` (the
+  composition root), which is the only place logic meets Amplify/HealthKit.
 - **`APIService` is the network layer.** It wraps Amplify GraphQL queries/
   mutations and parsing behind `APIServiceProtocol`; inject the protocol, not the
-  concrete type, so unit tests run without a backend.
+  concrete type, so unit tests run without a backend. `DemoAPIService` is the
+  same protocol over in-memory tables.
+- **State is an enum, not a set of flags.** A mode is ONE value written in ONE
+  place; views switch over it. Every machine is a row in
+  `docs/state-machines.md` with its owner and tests, gate-checked by
+  `scripts/check_state_machines.py`. Before adding a boolean, an optional that
+  can mean two things, or a `show*` flag, find (or add) its row.
 - **Large types split by concern via extensions** — e.g. `APIService+Parsing`,
   `StatsViewModel+HealthKit`, `SettingsViewModel+Fetch`. Keeps every file small
   and single-purpose.
@@ -72,7 +86,10 @@ tests, just enough for the scenario, nothing speculative.
 - **`Views/`** — screens; **`Views/Components/`** — reusable subviews and sections.
 - **`ViewModels/`** — `ObservableObject` state + logic, injectable deps.
 - **`Services/`** — `APIService`, `HealthKitService`, `NotificationManager`, etc.
-- **`Models/` / `Constants/`** — value types and static data.
+- **`Models/` / `Constants/`** — value types, the state enums, and static data.
+- **`Core/`** — `AppMode`, `AppServices` (composition root), `DemoSession`, seams.
+- **`Shared/`** — pure types compiled into BOTH the iOS app and the Watch app
+  (the watch wire protocol and status enums).
 - **`AmplifyModels/`** — generated; do not hand-edit, exempt from the gates.
 - Tests under `jpc.fit.nativeTests/` (unit) and `jpc.fit.nativeUITests/` (Gherkin).
 
@@ -100,6 +117,11 @@ the code, never the gate.
   allowed only as Amplify/WCSession bridging; everything else needs a concrete type.
 - **Halstead difficulty ≤ 20 per function** (`scripts/halstead_check.py`) — split
   dense expressions into named intermediate steps.
+- **State-machine catalog in sync** (`scripts/check_state_machines.py`) — every
+  `/// StateMachine:` marker has a row in `docs/state-machines.md` and vice
+  versa; no `*Status: String`, no two `show*` flags per file, no `show*` flag
+  next to a `*Message: String?`. Fix by modelling the enum, never by deleting
+  the row.
 - **Acceptance tests are always Gherkin** — real `.feature` files in
   `jpc.fit.nativeUITests/Features/`, executed by the native runner. Never ship a
   feature without its acceptance scenario. The concrete XCUITest methods are
@@ -111,13 +133,13 @@ the code, never the gate.
 ### Honest e2e: exercise the real behavior, not just navigation
 
 - An acceptance test must assert on **observable app behavior** (a control appears,
-  the date changes, the Sign Out button shows), never merely that a tab is selected.
-- These run against the **live backend** with the `TEST_EMAIL` / `TEST_PASSWORD`
-  credentials (from the environment or a local `.env`), and grant the HealthKit
-  permission prompt on first launch. Network-dependent assertions use generous
-  waits and `XCTSkip` when credentials are absent, so CI stays green when the
-  backend is unavailable — but offline-deterministic flows (tab nav, the Sign Out
-  button, date navigation) are asserted **strictly**.
+  the date changes, the remaining budget drops), never merely that a tab is selected.
+- These run against the **demo backend** (`--demo`): deterministic seed, zero
+  network, so every assertion is **strict** and every wait is a real condition
+  (`waitForExistence`), never a sleep. CI runs the suite exactly once — there is
+  no retry loop, and a test that fails intermittently is a race to fix, never to
+  re-run, skip or loosen (AGENTS.md §1). `FIT_E2E_BACKEND=live` drives the same
+  scenarios against the real backend by hand; `@demo-data` scenarios skip there.
 - A feature whose logic can be unit-tested deterministically (calorie math,
   streaks, parsing) **must** have those unit tests in addition to the Gherkin flow.
   The Gherkin proves the wiring; the unit tests prove the logic.
@@ -155,7 +177,37 @@ xcodebuild test -scheme jpc.fit.native -destination 'platform=iOS Simulator,name
 ## Key facts
 
 - **Repo:** `johnpc/jpc.fit.native`. iOS bundle id `com.johncorser.fit`.
-- **CI:** `.github/workflows/quality-gates.yml` blocks PRs (build, line limit,
-  unit tests + coverage, CRAP, Gherkin acceptance) and deploys to App Store Connect
-  on push to `main`. Repo secrets: `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_CONTENT`,
-  `TEAM_ID`, `TEST_EMAIL`, `TEST_PASSWORD`.
+- **CI:** `.github/workflows/quality-gates.yml` runs on the self-hosted Mac mini
+  and blocks PRs (build, line limit, static gates, unit tests + coverage, CRAP,
+  Gherkin acceptance on the demo backend) and deploys to App Store Connect on
+  push to `main`. Repo secrets: `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_CONTENT`,
+  `TEAM_ID`, `CI_KEYCHAIN_PASSWORD`. (`TEST_EMAIL` / `TEST_PASSWORD` are only for
+  manual live runs.)
+
+## Decisions log
+
+- **2026-11-16** Implicit state machines made explicit (director: "find all the
+  implicit state machines; elevate UX, DX and AX without breaking anything").
+  Surveyed the whole app and watch; 22 machines catalogued in
+  `docs/state-machines.md` (owner + tests per row, gate-checked by
+  `scripts/check_state_machines.py`). Converted: **Streak**
+  (`computing/known/unavailable` — a failed first walk used to show
+  "Calculating streak..." forever), **Preferences record**
+  (`unknown/missing/stored` — a toggle after a failed fetch CREATED a duplicate
+  row), **Reminders** (`unknown/notRequested/userDisabled/osDenied/enabled` —
+  "denied in iOS Settings" now shows an Open Settings shortcut instead of a dead
+  Enable button), **Day record**, **Off-screen refresh** (three view flags →
+  `RefreshGate` in the VM), **Weight toast** (one optional, VM-owned timer),
+  **Measurement prompt**, **Food sheet** + `FoodDraft`, **Quick-add sheet** +
+  `QuickAddDraft` (validation/naming out of the views), **Food list**, **Quote
+  bag**, and on the watch **Watch health source** / **Phone link** (were
+  `String`s) plus the `WatchCommand`/`WatchSnapshot` wire codec compiled into
+  both targets. **Fake backend:** `AppMode` (`--demo`) + `AppServices` swap the
+  API/HealthKit/auth seams to `DemoAPIService`/`DemoHealthStats`/`DemoSession`;
+  `WeightViewModel` and `SettingsViewModel` now read through
+  `APIServiceProtocol` (extended with weights/heights/quick-add/preferences
+  writes) and are unit-covered — removed from the coverage exclusions. The
+  acceptance suite runs on the demo backend with strict assertions and no
+  credentials; the CI retry loop and `sleep`s are gone (no flaky tests —
+  README/AGENTS.md). Verified on the Mac mini: quality gate, unit + acceptance
+  suites, screenshots and a screen recording of the demo flows (see the PR).

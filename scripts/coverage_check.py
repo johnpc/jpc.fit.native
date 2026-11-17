@@ -17,9 +17,10 @@ THRESHOLD = 80.0
 
 # Files excluded from *unit* coverage: exercised by the Gherkin acceptance suite
 # against the live backend, not by unit tests. This is the same set the prior CI
-# excluded — pure SwiftUI views plus the Amplify-coupled Services/ViewModels that
-# talk to Amplify directly (no injectable seam) — extended to the extension files
-# those types were split into. Lower these by writing tests, never by adding here.
+# excluded — pure SwiftUI views plus the Amplify/HealthKit/UNUserNotificationCenter
+# adapters that talk to the framework directly (the seam is the protocol they
+# implement; the fake behind it is what unit tests exercise). Shrink this set by
+# moving logic behind a seam, never grow it to hide untested logic.
 VIEW_FILES = {
     # Pure SwiftUI views / app shell
     "ContentView.swift", "MainTabView.swift", "FoodListView.swift",
@@ -32,17 +33,17 @@ VIEW_FILES = {
     "QuickAddsListSection.swift", "PhilosophySection.swift",
     "StatsStreakSection.swift", "StatsBreakdownSection.swift",
     "jpc_fit_nativeApp.swift", "FoodListView+Actions.swift",
+    "DemoSessionView.swift",
     # Services/ViewModels that call Amplify/HealthKit directly (acceptance-covered)
     "HealthKitService.swift", "PhoneConnectivityManager.swift",
     "BackgroundSyncService.swift",
     "NotificationManager.swift", "NotificationManager+Scheduling.swift",
     "APIService.swift", "APIService+Parsing.swift", "APIService+HealthKitCache.swift",
-    "APIService+Preferences.swift", "APIService+Stats.swift",
-    "WeightViewModel.swift", "WeightViewModel+Fetch.swift",
-    # StatsViewModel now reads through APIServiceProtocol and is unit-covered —
-    # deliberately NOT excluded anymore.
-    "SettingsViewModel.swift", "SettingsViewModel+Fetch.swift",
-    "SettingsViewModel+QuickAdds.swift",
+    "APIService+Preferences.swift", "APIService+Stats.swift", "APIService+Mutations.swift",
+    "APIService+QuickAdds.swift", "APIService+Weights.swift", "AmplifyAuthService.swift",
+    "NotificationCenterProviding.swift",
+    # Stats/Weight/Settings ViewModels read through APIServiceProtocol and are
+    # unit-covered — deliberately NOT excluded (they used to be).
 }
 
 

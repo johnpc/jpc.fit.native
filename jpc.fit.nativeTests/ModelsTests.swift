@@ -55,6 +55,12 @@ final class ModelsTests: XCTestCase {
         XCTAssertEqual(item.protein, 2)
     }
 
+    func testQuickAddItemEquatable() {
+        let a = QuickAddItem(id: "qa1", name: "Coffee", calories: 50, icon: "☕", protein: 2)
+        XCTAssertEqual(a, QuickAddItem(id: "qa1", name: "Coffee", calories: 50, icon: "☕", protein: 2))
+        XCTAssertNotEqual(a, QuickAddItem(id: "qa1", name: "Coffee", calories: 55, icon: "☕", protein: 2))
+    }
+
     func testQuickAddItemNilProtein() {
         let item = QuickAddItem(id: "qa2", name: "Soda", calories: 150, icon: "🥤", protein: nil)
         XCTAssertNil(item.protein)

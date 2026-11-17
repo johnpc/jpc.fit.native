@@ -1,6 +1,6 @@
 import Foundation
 
-struct QuickAddItem: Identifiable {
+struct QuickAddItem: Identifiable, Equatable, Sendable {
     let id: String
     let name: String
     let calories: Int

@@ -14,3 +14,12 @@ Feature: Calories Tab
     And I am on the Calories tab
     When I tap the back button
     Then the date should change to yesterday
+
+  @demo-data
+  Scenario: Quick add logs a food instantly
+    Given I am signed in
+    And I am on the Calories tab
+    And remaining calories should read "1,670 cal"
+    When I tap the quick add "Pizza slice"
+    Then the food list should show "Pizza slice"
+    And remaining calories should read "1,370 cal"

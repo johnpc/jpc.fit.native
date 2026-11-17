@@ -21,12 +21,12 @@ struct ContentView: View {
                                 .foregroundColor(.blue)
                         }
                         .font(.caption2)
-                        if !dataManager.authStatus.isEmpty {
-                            Text(dataManager.authStatus)
+                        if let label = dataManager.health.label {
+                            Text(label)
                                 .font(.caption2)
                                 .foregroundColor(.gray)
                         }
-                        Text(dataManager.connectionStatus)
+                        Text(dataManager.phoneLink.label)
                             .font(.caption2)
                             .foregroundColor(.gray)
                     }

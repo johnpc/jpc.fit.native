@@ -16,11 +16,19 @@ extension AcceptanceTests {
         try runScenario(feature: "calories.feature", scenario: "Navigate to previous day")
     }
 
+    func test_Quick_add_logs_a_food_instantly() throws {
+        try runScenario(feature: "calories.feature", scenario: "Quick add logs a food instantly")
+    }
+
 
     // MARK: - User Login
 
     func test_Successful_login() throws {
         try runScenario(feature: "login.feature", scenario: "Successful login")
+    }
+
+    func test_Empty_credentials_are_rejected_with_an_explanation() throws {
+        try runScenario(feature: "login.feature", scenario: "Empty credentials are rejected with an explanation")
     }
 
 
@@ -37,6 +45,10 @@ extension AcceptanceTests {
         try runScenario(feature: "settings.feature", scenario: "View settings")
     }
 
+    func test_Sign_out_returns_to_the_sign_in_screen() throws {
+        try runScenario(feature: "settings.feature", scenario: "Sign out returns to the sign-in screen")
+    }
+
 
     // MARK: - Stats Tab
 
@@ -44,11 +56,19 @@ extension AcceptanceTests {
         try runScenario(feature: "stats.feature", scenario: "View stats")
     }
 
+    func test_Streak_counts_every_tracked_day_including_today() throws {
+        try runScenario(feature: "stats.feature", scenario: "Streak counts every tracked day including today")
+    }
+
 
     // MARK: - Weight Tab
 
     func test_View_weight_tab() throws {
         try runScenario(feature: "weight.feature", scenario: "View weight tab")
+    }
+
+    func test_Save_a_new_weight() throws {
+        try runScenario(feature: "weight.feature", scenario: "Save a new weight")
     }
 
 }

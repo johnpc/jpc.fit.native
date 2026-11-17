@@ -2,11 +2,11 @@ import SwiftUI
 
 struct AphorismsView: View {
     private let aphorisms = Aphorisms.all
-    @State private var usedIndexes: [Int] = []
+    /// Which quotes have been shown this cycle — see `QuoteBag`.
+    @State private var bag = QuoteBag(count: Aphorisms.all.count)
 
     private var currentQuote: String {
-        guard let lastIndex = usedIndexes.last else { return aphorisms[0] }
-        return aphorisms[lastIndex]
+        aphorisms[bag.current ?? 0]
     }
 
     var body: some View {
@@ -30,7 +30,7 @@ struct AphorismsView: View {
             Spacer()
 
             Button {
-                randomize()
+                bag.draw()
             } label: {
                 Text("Randomize Quote")
                     .frame(maxWidth: .infinity)
@@ -41,18 +41,7 @@ struct AphorismsView: View {
         }
         .navigationTitle("Aphorisms")
         .onAppear {
-            if usedIndexes.isEmpty { randomize() }
+            if bag.current == nil { bag.draw() }
         }
-    }
-
-    private func randomize() {
-        if usedIndexes.count == aphorisms.count {
-            usedIndexes = []
-        }
-        var randomIndex: Int
-        repeat {
-            randomIndex = Int.random(in: 0..<aphorisms.count)
-        } while usedIndexes.contains(randomIndex)
-        usedIndexes.append(randomIndex)
     }
 }

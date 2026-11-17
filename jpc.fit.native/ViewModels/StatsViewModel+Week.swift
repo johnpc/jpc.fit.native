@@ -35,7 +35,13 @@ extension StatsViewModel {
         let shortDay = date.formatted(.dateTime.month(.defaultDigits).day())
         return DayStats(day: dayString, shortDay: shortDay,
                         consumed: (foods ?? []).reduce(0, +), burned: burned,
-                        tracked: !(foods ?? []).isEmpty, failed: foods == nil)
+                        status: Self.status(of: foods))
+    }
+
+    /// nil = the request failed; [] = nothing logged; otherwise tracked.
+    nonisolated static func status(of calories: [Int]?) -> DayStats.Status {
+        guard let calories else { return .failed }
+        return calories.isEmpty ? .untracked : .tracked
     }
 
     /// Cache-first burn lookup with HealthKit backfill: days that predate the

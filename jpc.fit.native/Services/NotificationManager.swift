@@ -1,45 +1,48 @@
 import Foundation
 import UserNotifications
 
+/// Owner of the `ReminderState` machine (see `Models/ReminderState.swift`).
+/// The in-app "Disable Notifications" choice is persisted, because the OS
+/// authorization alone can't express it: a user who disabled reminders still
+/// has the OS permission granted, so without the stored flag the toggle
+/// silently flipped back on at the next launch.
+@MainActor
 class NotificationManager: ObservableObject {
     static let shared = NotificationManager()
 
-    @Published var isEnabled = false
+    @Published private(set) var state: ReminderState = .unknown
     @Published var reminderTimes: [DateComponents] = []
 
     let defaults: UserDefaults
+    let center: NotificationCenterProviding
     let timesKey = "notificationTimes"
     let disabledKey = "notificationsUserDisabled"
+    /// The launch-time OS check; await it to observe the settled state.
+    private(set) var initialRefresh: Task<Void, Never>?
 
-    init(defaults: UserDefaults = .standard) {
+    var isEnabled: Bool { state.isEnabled }
+
+    init(defaults: UserDefaults = .standard, center: NotificationCenterProviding = SystemNotificationCenter()) {
         self.defaults = defaults
+        self.center = center
         loadTimes()
-        checkPermission()
+        if defaults.bool(forKey: disabledKey) { state = .userDisabled }
+        initialRefresh = Task { await refreshState() }
     }
 
-    /// OS authorization alone isn't enough: a user who tapped "Disable
-    /// Notifications" still has the OS permission granted, so without the
-    /// stored flag the toggle silently flipped back on at next launch.
-    func checkPermission() {
-        guard !defaults.bool(forKey: disabledKey) else {
-            isEnabled = false
-            return
-        }
-        UNUserNotificationCenter.current().getNotificationSettings { settings in
-            DispatchQueue.main.async {
-                self.isEnabled = settings.authorizationStatus == .authorized
-            }
-        }
+    /// Re-derive the state from the stored choice + the OS answer.
+    func refreshState() async {
+        let status = await center.authorizationStatus()
+        state = ReminderState.from(status, userDisabled: defaults.bool(forKey: disabledKey))
     }
 
+    @discardableResult
     func requestPermission() async -> Bool {
         do {
-            let granted = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
-            await MainActor.run {
-                defaults.set(false, forKey: disabledKey)
-                isEnabled = granted
-                if granted { scheduleNotifications() }
-            }
+            let granted = try await center.requestAuthorization()
+            defaults.set(false, forKey: disabledKey)
+            state = granted ? .enabled : .osDenied
+            if granted { await scheduleNotifications() }
             return granted
         } catch {
             Log.notifications.error("Notification permission error: \(error)")
@@ -48,8 +51,8 @@ class NotificationManager: ObservableObject {
     }
 
     func disable() {
-        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        center.removeAllPendingRequests()
         defaults.set(true, forKey: disabledKey)
-        isEnabled = false
+        state = .userDisabled
     }
 }

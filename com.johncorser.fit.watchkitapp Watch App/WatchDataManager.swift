@@ -4,113 +4,105 @@ import WatchConnectivity
 import HealthKit
 import WidgetKit
 
+/// Owner of the watch's two machines — `WatchHealthStatus` (where the burn
+/// number came from) and `PhoneLink` (is the phone reachable) — plus today's
+/// totals. Talks to the phone only through `WatchCommand` / `WatchSnapshot`.
 @MainActor
 class WatchDataManager: NSObject, ObservableObject {
     static let shared = WatchDataManager()
-    
-    @Published var authStatus: String = ""
-    @Published var connectionStatus: String = "..."
+
+    @Published var health: WatchHealthStatus = .unknown
+    @Published var phoneLink: PhoneLink = .unknown
     @Published var foods: [WatchFood] = []
     @Published var userQuickAdds: [WatchQuickAdd] = []
     @Published var consumedCalories: Int = 0
     @Published var burnedCalories: Int = 0
     @Published var steps: Int = 0
     @Published var isLoading = false
-    
+
     var remainingCalories: Int { burnedCalories - consumedCalories }
     var quickAdds: [WatchQuickAdd] { userQuickAdds.isEmpty ? WatchQuickAdd.defaults : userQuickAdds }
-    
+
     private let healthStore = HKHealthStore()
     private let session: WCSession? = WCSession.isSupported() ? WCSession.default : nil
     private let defaults = UserDefaults(suiteName: "group.com.johncorser.fit")
-    
+
     override init() {
         super.init()
         session?.delegate = self
         session?.activate()
         loadCachedData()
     }
-    
+
     func requestHealthKitAuth() async {
         guard HKHealthStore.isHealthDataAvailable() else {
-            authStatus = "HK unavailable"
+            health = .unavailable
             return
         }
-        
-        let activeType = HKQuantityType(.activeEnergyBurned)
-        let basalType = HKQuantityType(.basalEnergyBurned)
-        let stepsType = HKQuantityType(.stepCount)
-        let types: Set<HKQuantityType> = [activeType, basalType, stepsType]
-        
+        let types: Set<HKQuantityType> = [HKQuantityType(.activeEnergyBurned), HKQuantityType(.basalEnergyBurned), HKQuantityType(.stepCount)]
         do {
             try await healthStore.requestAuthorization(toShare: [], read: types)
-            // Check if we can actually query
             await fetchHealthKitData()
         } catch {
-            authStatus = "Err: \(error.localizedDescription.prefix(30))"
+            health = .failed(error.localizedDescription)
         }
     }
-    
+
     func refresh() async {
         isLoading = true
-        
-        // Query HealthKit directly on watch
         await fetchHealthKitData()
-        
-        // Also request food data from phone
         if let session, session.activationState == .activated {
-            connectionStatus = session.isReachable ? "📱 Reachable" : "📱 Not reachable"
-            if session.isReachable {
-                session.sendMessage(["action": "requestData"], replyHandler: nil, errorHandler: nil)
-            } else {
-                session.transferUserInfo(["action": "requestData"])
-            }
+            phoneLink = .from(isReachable: session.isReachable)
+            send(.requestData, fallbackToTransfer: true)
         }
         isLoading = false
     }
-    
+
     func addFood(name: String, calories: Int, protein: Int?) {
-        let message: [String: Any] = [
-            "action": "addFood",
-            "name": name,
-            "calories": calories,
-            "protein": protein ?? 0
-        ]
-        session?.sendMessage(message, replyHandler: nil, errorHandler: nil)
+        send(.addFood(name: name, calories: calories, protein: protein))
         consumedCalories += calories
         updateComplication()
     }
-    
+
     func deleteFood(id: String, calories: Int) {
-        session?.sendMessage(["action": "deleteFood", "id": id], replyHandler: nil, errorHandler: nil)
+        send(.deleteFood(id: id))
         consumedCalories -= calories
         foods.removeAll { $0.id == id }
         updateComplication()
     }
-    
+
+    /// Live message when reachable; `transferUserInfo` queues it otherwise.
+    private func send(_ command: WatchCommand, fallbackToTransfer: Bool = false) {
+        guard let session else { return }
+        if session.isReachable || !fallbackToTransfer {
+            session.sendMessage(command.message, replyHandler: nil, errorHandler: nil)
+        } else {
+            session.transferUserInfo(command.message)
+        }
+    }
+
     private func fetchHealthKitData() async {
         let cal = Calendar.current
         let start = cal.startOfDay(for: Date())
-        let end = cal.date(byAdding: .day, value: 1, to: start)!
+        let end = cal.date(byAdding: .day, value: 1, to: start) ?? start
         let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
-        
+
         let (a, aErr) = await querySum(.activeEnergyBurned, predicate: predicate)
         let (b, bErr) = await querySum(.basalEnergyBurned, predicate: predicate)
         let (s, _) = await querySum(.stepCount, predicate: predicate)
-        
+
         if let err = aErr ?? bErr {
-            authStatus = "Err: \(err.localizedDescription.prefix(25))"
+            health = .failed(err.localizedDescription)
         } else {
             burnedCalories = Int(a + b)
             steps = Int(s)
-            authStatus = "HK: \(Int(a))+\(Int(b))=\(burnedCalories)"
+            health = .measured(active: Int(a), basal: Int(b))
             defaults?.set(burnedCalories, forKey: "watchBurned")
         }
-        
         updateComplication()
-        session?.sendMessage(["action": "syncHealthKit"], replyHandler: nil, errorHandler: nil)
+        send(.syncHealthKit)
     }
-    
+
     private func querySum(_ type: HKQuantityTypeIdentifier, predicate: NSPredicate) async -> (Double, Error?) {
         await withCheckedContinuation { cont in
             let query = HKStatisticsQuery(quantityType: HKQuantityType(type), quantitySamplePredicate: predicate, options: .cumulativeSum) { _, stats, error in
@@ -121,94 +113,47 @@ class WatchDataManager: NSObject, ObservableObject {
             healthStore.execute(query)
         }
     }
-    
+
     private func loadCachedData() {
         consumedCalories = defaults?.integer(forKey: "watchConsumed") ?? 0
         burnedCalories = defaults?.integer(forKey: "watchBurned") ?? 0
-        
         if let data = defaults?.data(forKey: "watchQuickAdds"),
            let qa = try? JSONDecoder().decode([WatchQuickAdd].self, from: data) {
             userQuickAdds = qa
         }
     }
-    
+
     private func updateComplication() {
         defaults?.set(consumedCalories, forKey: "watchConsumed")
         defaults?.set(burnedCalories, forKey: "watchBurned")
         defaults?.set(remainingCalories, forKey: "watchRemaining")
-        defaults?.synchronize()
-        
         WidgetCenter.shared.reloadAllTimelines()
+    }
+
+    /// Applies a phone snapshot: totals, rows, tiles (cached for next launch).
+    func apply(_ snapshot: WatchSnapshot) {
+        consumedCalories = snapshot.consumed
+        burnedCalories = snapshot.burned
+        foods = snapshot.foods
+        userQuickAdds = snapshot.quickAdds
+        if let encoded = try? JSONEncoder().encode(userQuickAdds) {
+            defaults?.set(encoded, forKey: "watchQuickAdds")
+        }
+        health = .fromPhone
+        updateComplication()
     }
 }
 
 extension WatchDataManager: WCSessionDelegate {
     nonisolated func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?) {}
-    
+
     nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
-        Task { @MainActor in
-            if let consumed = message["consumed"] as? Int {
-                consumedCalories = consumed
-            }
-            if let burned = message["burned"] as? Int {
-                burnedCalories = burned
-            }
-            if let foodsData = message["foods"] as? [[String: Any]] {
-                foods = foodsData.compactMap { WatchFood(dict: $0) }
-            }
-            if let qaData = message["quickAdds"] as? [[String: Any]] {
-                userQuickAdds = qaData.compactMap { WatchQuickAdd(dict: $0) }
-                if let encoded = try? JSONEncoder().encode(userQuickAdds) {
-                    defaults?.set(encoded, forKey: "watchQuickAdds")
-                }
-            }
-            authStatus = "Phone"
-            updateComplication()
-        }
+        guard let snapshot = WatchSnapshot(message: message) else { return }
+        Task { @MainActor in apply(snapshot) }
     }
 }
 
-/// The id/name/calories triple every phone→watch payload carries.
-private func parseCore(_ dict: [String: Any]) -> (id: String, name: String, calories: Int)? {
-    guard let id = dict["id"] as? String,
-          let name = dict["name"] as? String,
-          let calories = dict["calories"] as? Int else { return nil }
-    return (id, name, calories)
-}
-
-struct WatchFood: Identifiable {
-    let id: String
-    let name: String
-    let calories: Int
-
-    init?(dict: [String: Any]) {
-        guard let core = parseCore(dict) else { return nil }
-        (id, name, calories) = core
-    }
-}
-
-struct WatchQuickAdd: Identifiable, Codable {
-    let id: String
-    let name: String
-    let calories: Int
-    let icon: String
-    let protein: Int?
-
-    init?(dict: [String: Any]) {
-        guard let core = parseCore(dict) else { return nil }
-        (id, name, calories) = core
-        icon = dict["icon"] as? String ?? "🍽️"
-        protein = dict["protein"] as? Int
-    }
-
-    init(id: String, name: String, calories: Int, icon: String, protein: Int?) {
-        self.id = id
-        self.name = name
-        self.calories = calories
-        self.icon = icon
-        self.protein = protein
-    }
-    
+extension WatchQuickAdd {
     static let defaults: [WatchQuickAdd] = [
         WatchQuickAdd(id: "dqa-100", name: "xx-small", calories: 100, icon: "🍎", protein: nil),
         WatchQuickAdd(id: "dqa-250", name: "x-small", calories: 250, icon: "🍽️", protein: nil),
