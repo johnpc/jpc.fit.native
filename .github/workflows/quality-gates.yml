@@ -25,7 +25,7 @@ jobs:
     # self-hosted runners on a public repo are unsafe for fork PRs (arbitrary
     # code execution) -- so only run for push-to-main or a PR authored by the
     # repo owner. Other PRs simply skip this job.
-    if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc'
+    if: github.event_name != 'pull_request' || contains(fromJSON('["johnpc","github-actions[bot]"]'), github.event.pull_request.user.login)
     runs-on: [self-hosted, mac-mini]
     timeout-minutes: 30
     steps:
@@ -51,7 +51,7 @@ jobs:
     # self-hosted runners on a public repo are unsafe for fork PRs (arbitrary
     # code execution) -- so only run for push-to-main or a PR authored by the
     # repo owner. Other PRs simply skip this job.
-    if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc'
+    if: github.event_name != 'pull_request' || contains(fromJSON('["johnpc","github-actions[bot]"]'), github.event.pull_request.user.login)
     runs-on: [self-hosted, mac-mini]
     timeout-minutes: 30
     steps:
@@ -84,7 +84,7 @@ jobs:
     # self-hosted runners on a public repo are unsafe for fork PRs (arbitrary
     # code execution) -- so only run for push-to-main or a PR authored by the
     # repo owner. Other PRs simply skip this job.
-    if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc'
+    if: github.event_name != 'pull_request' || contains(fromJSON('["johnpc","github-actions[bot]"]'), github.event.pull_request.user.login)
     runs-on: [self-hosted, mac-mini]
     timeout-minutes: 30
     needs: build
@@ -116,7 +116,7 @@ jobs:
     # self-hosted runners on a public repo are unsafe for fork PRs (arbitrary
     # code execution) -- so only run for push-to-main or a PR authored by the
     # repo owner. Other PRs simply skip this job.
-    if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc'
+    if: github.event_name != 'pull_request' || contains(fromJSON('["johnpc","github-actions[bot]"]'), github.event.pull_request.user.login)
     runs-on: [self-hosted, mac-mini]
     timeout-minutes: 30
     needs: unit-tests
@@ -137,7 +137,7 @@ jobs:
     # self-hosted runners on a public repo are unsafe for fork PRs (arbitrary
     # code execution) -- so only run for push-to-main or a PR authored by the
     # repo owner. Other PRs simply skip this job.
-    if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc'
+    if: github.event_name != 'pull_request' || contains(fromJSON('["johnpc","github-actions[bot]"]'), github.event.pull_request.user.login)
     runs-on: [self-hosted, mac-mini]
     needs: build
     timeout-minutes: 40
