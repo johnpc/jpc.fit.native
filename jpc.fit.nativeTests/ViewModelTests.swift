@@ -7,7 +7,7 @@ final class WeightViewModelTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        vm = WeightViewModel()
+        vm = WeightViewModel(api: MockAPIService())
     }
 
     func testDefaultWeight() {
@@ -89,7 +89,7 @@ final class StatsViewModelTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        vm = StatsViewModel()
+        vm = StatsViewModel(api: MockAPIService(), healthKit: NoHealthStats())
     }
 
     func testWeekNetEmpty() {
@@ -98,9 +98,9 @@ final class StatsViewModelTests: XCTestCase {
 
     func testWeekNetCalculation() {
         vm.weekData = [
-            DayStats(day: "5/12/2026", shortDay: "5/12", consumed: 2000, burned: 2500, tracked: true),
-            DayStats(day: "5/13/2026", shortDay: "5/13", consumed: 2200, burned: 2300, tracked: true),
-            DayStats(day: "5/14/2026", shortDay: "5/14", consumed: 0, burned: 0, tracked: false),
+            DayStats(day: "5/12/2026", shortDay: "5/12", consumed: 2000, burned: 2500, status: .tracked),
+            DayStats(day: "5/13/2026", shortDay: "5/13", consumed: 2200, burned: 2300, status: .tracked),
+            DayStats(day: "5/14/2026", shortDay: "5/14", consumed: 0, burned: 0, status: .untracked),
         ]
         // Only tracked days: (2000-2500) + (2200-2300) = -500 + -100 = -600
         XCTAssertEqual(vm.weekNet, -600)
@@ -108,21 +108,21 @@ final class StatsViewModelTests: XCTestCase {
 
     func testTrackedCount() {
         vm.weekData = [
-            DayStats(day: "5/12/2026", shortDay: "5/12", consumed: 2000, burned: 2500, tracked: true),
-            DayStats(day: "5/13/2026", shortDay: "5/13", consumed: 0, burned: 0, tracked: false),
-            DayStats(day: "5/14/2026", shortDay: "5/14", consumed: 1800, burned: 2000, tracked: true),
+            DayStats(day: "5/12/2026", shortDay: "5/12", consumed: 2000, burned: 2500, status: .tracked),
+            DayStats(day: "5/13/2026", shortDay: "5/13", consumed: 0, burned: 0, status: .untracked),
+            DayStats(day: "5/14/2026", shortDay: "5/14", consumed: 1800, burned: 2000, status: .tracked),
         ]
         XCTAssertEqual(vm.trackedCount, 2)
     }
 
     func testStreakLbs() {
-        vm.streakNet = -7000 // 7000 cal deficit = 2 lbs lost
-        XCTAssertEqual(vm.streakLbs, -2.0, accuracy: 0.01)
+        vm.streak = .known(days: 3, net: -7000) // 7000 cal deficit = 2 lbs lost
+        XCTAssertEqual(vm.streak.lbs, -2.0, accuracy: 0.01)
     }
 
     func testStreakLbsPositive() {
-        vm.streakNet = 3500 // 3500 cal surplus = 1 lb gained
-        XCTAssertEqual(vm.streakLbs, 1.0, accuracy: 0.01)
+        vm.streak = .known(days: 3, net: 3500) // 3500 cal surplus = 1 lb gained
+        XCTAssertEqual(vm.streak.lbs, 1.0, accuracy: 0.01)
     }
 
     func testWeekRangeString() {
@@ -135,12 +135,12 @@ final class StatsViewModelTests: XCTestCase {
     }
 
     func testDayStatsNet() {
-        let day = DayStats(day: "5/17/2026", shortDay: "5/17", consumed: 1800, burned: 2200, tracked: true)
+        let day = DayStats(day: "5/17/2026", shortDay: "5/17", consumed: 1800, burned: 2200, status: .tracked)
         XCTAssertEqual(day.net, -400)
     }
 
     func testDayStatsNetPositive() {
-        let day = DayStats(day: "5/17/2026", shortDay: "5/17", consumed: 3000, burned: 2200, tracked: true)
+        let day = DayStats(day: "5/17/2026", shortDay: "5/17", consumed: 3000, burned: 2200, status: .tracked)
         XCTAssertEqual(day.net, 800)
     }
 }

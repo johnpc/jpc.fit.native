@@ -28,6 +28,16 @@
 		DA1BEEF002DA1BEEF002DA1B /* DayKeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1BEEF001DA1BEEF001DA1B /* DayKeyTests.swift */; };
 		DA1BEEF004DA1BEEF004DA1B /* NotificationManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1BEEF003DA1BEEF003DA1B /* NotificationManagerTests.swift */; };
 		ED5356B415C5C02A0951541A /* com.johncorser.fit.watchkitapp Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = A615C8202F2BF9D100F36993 /* com.johncorser.fit.watchkitapp Watch App.app */; };
+		1D56F62605CBB3415EEA0270 /* AppModeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D26E947C7FFF8D4BE2E5E62C /* AppModeTests.swift */; };
+		97A9C839DADB058EB79A83F1 /* DemoAPIServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C41CB1FEB459B27BE623F9D /* DemoAPIServiceTests.swift */; };
+		4E3AF14709D861BE9E210F3A /* DraftTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EDDD1CB6FB7408C48C91BB2 /* DraftTests.swift */; };
+		4C1BB357E291BB5650BBBA7E /* SettingsQuickAddTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31E67606BC1D60E89D43D7D3 /* SettingsQuickAddTests.swift */; };
+		28894288D8BEBC83CC6FA0EA /* SettingsViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F69E580E33F3226F3486FE1 /* SettingsViewModelTests.swift */; };
+		AFD1D21201BB9255E71891BF /* StateTransitionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C85F4CC659DE4B3232DCF2E2 /* StateTransitionTests.swift */; };
+		9071BCC0CD3ABD5D66285589 /* WatchProtocolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04DD30409CB598A46553A6A8 /* WatchProtocolTests.swift */; };
+		E22A97B25C37004259F0436A /* WeightViewModelSaveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 538BE92F1F89B786821D5F51 /* WeightViewModelSaveTests.swift */; };
+		0B9FF2A3A7E8D46013F30949 /* MockAPIService+Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68B400FD9CA7BB32CC2E5BD2 /* MockAPIService+Settings.swift */; };
+		0D86CDB8B5A5F2ECDB8AF56E /* NoHealthStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD2BA140C78D4947BDAEAB4C /* NoHealthStats.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -123,6 +133,16 @@
 		DA1BEEF001DA1BEEF001DA1B /* DayKeyTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DayKeyTests.swift; sourceTree = "<group>"; };
 		DA1BEEF003DA1BEEF003DA1B /* NotificationManagerTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NotificationManagerTests.swift; sourceTree = "<group>"; };
 		F66BD876D981F3FB810AD5AD /* jpc.fit.nativeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = jpc.fit.nativeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D26E947C7FFF8D4BE2E5E62C /* AppModeTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "AppModeTests.swift"; sourceTree = "<group>"; };
+		6C41CB1FEB459B27BE623F9D /* DemoAPIServiceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "DemoAPIServiceTests.swift"; sourceTree = "<group>"; };
+		9EDDD1CB6FB7408C48C91BB2 /* DraftTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "DraftTests.swift"; sourceTree = "<group>"; };
+		31E67606BC1D60E89D43D7D3 /* SettingsQuickAddTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "SettingsQuickAddTests.swift"; sourceTree = "<group>"; };
+		8F69E580E33F3226F3486FE1 /* SettingsViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "SettingsViewModelTests.swift"; sourceTree = "<group>"; };
+		C85F4CC659DE4B3232DCF2E2 /* StateTransitionTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "StateTransitionTests.swift"; sourceTree = "<group>"; };
+		04DD30409CB598A46553A6A8 /* WatchProtocolTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "WatchProtocolTests.swift"; sourceTree = "<group>"; };
+		538BE92F1F89B786821D5F51 /* WeightViewModelSaveTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "WeightViewModelSaveTests.swift"; sourceTree = "<group>"; };
+		68B400FD9CA7BB32CC2E5BD2 /* MockAPIService+Settings.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "MockAPIService+Settings.swift"; sourceTree = "<group>"; };
+		DD2BA140C78D4947BDAEAB4C /* NoHealthStats.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "NoHealthStats.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -134,6 +154,18 @@
 			target = A615C90C2F2BFDBC00F36993 /* com.johncorser.fit.watchkitappExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		169D4440A47E886246F4FDA6 /* Exceptions for "jpc.fit.native" folder in "com.johncorser.fit.watchkitapp Watch App" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = A615C81C2F2BF9D100F36993 /* Sources */;
+			membershipExceptions = (
+				Shared/WatchCommand.swift,
+				Shared/WatchSnapshot.swift,
+				Shared/WatchStatus.swift,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A615C8212F2BF9D100F36993 /* com.johncorser.fit.watchkitapp Watch App */ = {
@@ -154,6 +186,7 @@
 		A6F519B72F292AF4003875EA /* jpc.fit.native */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				169D4440A47E886246F4FDA6 /* Exceptions for "jpc.fit.native" folder in "com.johncorser.fit.watchkitapp Watch App" target */,
 			);
 			path = jpc.fit.native;
 			sourceTree = "<group>";
@@ -226,6 +259,8 @@
 			isa = PBXGroup;
 			children = (
 				6D18B7D69AD673F467FD03CD /* MockAPIService.swift */,
+				68B400FD9CA7BB32CC2E5BD2 /* MockAPIService+Settings.swift */,
+				DD2BA140C78D4947BDAEAB4C /* NoHealthStats.swift */,
 			);
 			name = Mocks;
 			path = Mocks;
@@ -295,6 +330,14 @@
 				DA1BEEF003DA1BEEF003DA1B /* NotificationManagerTests.swift */,
 				07FE64B438A617B1C0C531F9 /* ModelsTests.swift */,
 				B0F6FBB19F57D6D67F487411 /* ViewModelTests.swift */,
+				D26E947C7FFF8D4BE2E5E62C /* AppModeTests.swift */,
+				6C41CB1FEB459B27BE623F9D /* DemoAPIServiceTests.swift */,
+				9EDDD1CB6FB7408C48C91BB2 /* DraftTests.swift */,
+				31E67606BC1D60E89D43D7D3 /* SettingsQuickAddTests.swift */,
+				8F69E580E33F3226F3486FE1 /* SettingsViewModelTests.swift */,
+				C85F4CC659DE4B3232DCF2E2 /* StateTransitionTests.swift */,
+				04DD30409CB598A46553A6A8 /* WatchProtocolTests.swift */,
+				538BE92F1F89B786821D5F51 /* WeightViewModelSaveTests.swift */,
 			);
 			name = jpc.fit.nativeTests;
 			path = jpc.fit.nativeTests;
@@ -538,6 +581,16 @@
 				95E5B73E6857D33EE6EA0958 /* ModelsTests.swift in Sources */,
 				B846FC9A4B12B3D4CD35EE07 /* MockAPIService.swift in Sources */,
 				B72FF9A19C8BFA838D71BF05 /* ViewModelTests.swift in Sources */,
+				1D56F62605CBB3415EEA0270 /* AppModeTests.swift in Sources */,
+				97A9C839DADB058EB79A83F1 /* DemoAPIServiceTests.swift in Sources */,
+				4E3AF14709D861BE9E210F3A /* DraftTests.swift in Sources */,
+				4C1BB357E291BB5650BBBA7E /* SettingsQuickAddTests.swift in Sources */,
+				28894288D8BEBC83CC6FA0EA /* SettingsViewModelTests.swift in Sources */,
+				AFD1D21201BB9255E71891BF /* StateTransitionTests.swift in Sources */,
+				9071BCC0CD3ABD5D66285589 /* WatchProtocolTests.swift in Sources */,
+				E22A97B25C37004259F0436A /* WeightViewModelSaveTests.swift in Sources */,
+				0B9FF2A3A7E8D46013F30949 /* MockAPIService+Settings.swift in Sources */,
+				0D86CDB8B5A5F2ECDB8AF56E /* NoHealthStats.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -4,12 +4,16 @@ import HealthKit
 import Amplify
 import WidgetKit
 
+/// Live-only glue: pushes today's HealthKit totals to the backend from the
+/// scene lifecycle and the BGTask. Demo mode has no Amplify configured (asking
+/// `Amplify.Auth` then is a precondition failure), so it does nothing there.
 class BackgroundSyncService {
     static let shared = BackgroundSyncService()
     private let store = HKHealthStore()
-    private let api = APIService.shared
-    
+    private var api: APIServiceProtocol { AppServices.api }
+
     func syncHealthKit() async {
+        guard AppServices.mode == .live else { return }
         guard (try? await Amplify.Auth.getCurrentUser()) != nil else { return }
         
         let today = Date()

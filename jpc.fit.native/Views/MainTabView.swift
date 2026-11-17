@@ -1,32 +1,29 @@
 import SwiftUI
-import Amplify
 
 struct MainTabView: View {
-    let user: AuthUser
-    
     var body: some View {
         TabView {
-            FoodListView(user: user)
+            FoodListView()
                 .tabItem {
                     Label("Calories", systemImage: "fork.knife")
                 }
-            
-            WeightView(user: user)
+
+            WeightView()
                 .tabItem {
                     Label("Weight", systemImage: "scalemass")
                 }
-            
+
             StatsView()
                 .tabItem {
                     Label("Stats", systemImage: "chart.bar")
                 }
-            
+
             AphorismsView()
                 .tabItem {
                     Label("Quotes", systemImage: "quote.bubble")
                 }
-            
-            SettingsView(user: user)
+
+            SettingsView()
                 .tabItem {
                     Label("Settings", systemImage: "gearshape")
                 }

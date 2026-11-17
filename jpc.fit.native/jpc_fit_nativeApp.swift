@@ -21,12 +21,16 @@ struct jpc_fit_nativeApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @Environment(\.scenePhase) private var scenePhase
     private let connectivityManager = PhoneConnectivityManager.shared
-    
+    /// Decided once from the launch arguments; see `Core/AppMode.swift`.
+    private let mode = AppMode.fromProcess
+
     init() {
-        configureAmplify()
+        AppServices.configure(mode)
+        // Demo mode never touches the network, so Amplify is not even configured.
+        if mode == .live { configureAmplify() }
         registerBackgroundTasks()
     }
-    
+
     func configureAmplify() {
         do {
             try Amplify.add(plugin: AWSCognitoAuthPlugin())
@@ -36,7 +40,7 @@ struct jpc_fit_nativeApp: App {
             Log.app.error("Failed to configure Amplify: \(error)")
         }
     }
-    
+
     func registerBackgroundTasks() {
         BGTaskScheduler.shared.register(forTaskWithIdentifier: "com.johncorser.fit.healthkitsync", using: nil) { task in
             Task {
@@ -46,10 +50,10 @@ struct jpc_fit_nativeApp: App {
             }
         }
     }
-    
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(mode: mode)
                 .onChange(of: scenePhase) { _, phase in
                     if phase == .active {
                         Task { await BackgroundSyncService.shared.syncHealthKit() }

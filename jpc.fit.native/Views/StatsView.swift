@@ -2,9 +2,6 @@ import SwiftUI
 
 struct StatsView: View {
     @StateObject private var vm = StatsViewModel()
-    @State private var refreshTrigger = UUID()
-    @State private var isVisible = false
-    @State private var isStale = false
 
     var body: some View {
         List {
@@ -15,21 +12,15 @@ struct StatsView: View {
             StatsBreakdownSection(weekData: vm.weekData)
         }
         .navigationTitle("Stats")
-        .task(id: refreshTrigger) { await vm.refresh(); isStale = false }
-        .refreshable { await vm.refresh(); isStale = false }
+        .task(id: vm.refreshToken) { await vm.refresh() }
+        .refreshable { await vm.refresh() }
         // TabView keeps this view alive in the background, and every food
-        // add/edit/delete posts .foodDataChanged. Refreshing immediately would
-        // rerun the whole week + streak walk per tap while the tab isn't even
-        // on screen — so off-screen we only mark the data stale and refresh
-        // once on next appearance.
-        .onReceive(NotificationCenter.default.publisher(for: .foodDataChanged)) { _ in
-            if isVisible { refreshTrigger = UUID() } else { isStale = true }
-        }
-        .onAppear {
-            isVisible = true
-            if isStale { refreshTrigger = UUID() }
-        }
-        .onDisappear { isVisible = false }
+        // add/edit/delete posts .foodDataChanged. The ViewModel's RefreshGate
+        // decides whether that means "refresh now" (on screen) or "refresh
+        // once on next appearance" (off screen) — see Models/RefreshGate.swift.
+        .onReceive(NotificationCenter.default.publisher(for: .foodDataChanged)) { _ in vm.foodDataChanged() }
+        .onAppear { vm.appeared() }
+        .onDisappear { vm.disappeared() }
         .overlay { if vm.isLoading && vm.weekData.isEmpty { ProgressView() } }
     }
 

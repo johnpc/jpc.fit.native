@@ -39,15 +39,6 @@ actor APIService {
         return parseCache(first)
     }
     
-    func fetchQuickAdds() async -> [QuickAddItem] {
-        let req = GraphQLRequest<JSONValue>(
-            document: "query{listQuickAdds{items{id name calories protein icon}}}", variables: [:], responseType: JSONValue.self)
-        guard case .success(let data) = try? await Amplify.API.query(request: req),
-              let items = data.value(at: "listQuickAdds.items"),
-              case .array(let arr) = items else { return [] }
-        return arr.compactMap { parseQuickAdd($0) }
-    }
-    
     /// Returns the created record's id so optimistic UI can swap its temp row.
     @discardableResult
     func createFood(name: String, calories: Int, protein: Int? = nil, day: String) async -> String? {
@@ -57,11 +48,7 @@ actor APIService {
             document: "mutation($input:CreateFoodInput!){createFood(input:$input){id}}",
             variables: ["input": input],
             responseType: JSONValue.self)
-        if case .success(let data) = try? await Amplify.API.mutate(request: req),
-           let id = data.value(at: "createFood.id"), case .string(let idStr) = id {
-            return idStr
-        }
-        return nil
+        return await createdId(req, at: "createFood.id")
     }
     
     /// Returns whether the delete reached the backend, so optimistic UI can roll back.
@@ -70,8 +57,7 @@ actor APIService {
         let req = GraphQLRequest<JSONValue>(
             document: "mutation($input:DeleteFoodInput!){deleteFood(input:$input){id}}",
             variables: ["input": ["id": id]], responseType: JSONValue.self)
-        guard case .success = try? await Amplify.API.mutate(request: req) else { return false }
-        return true
+        return await mutateSucceeded(req)
     }
 
     /// `protein: nil` explicitly clears the stored value (sends JSON null) —
@@ -83,8 +69,6 @@ actor APIService {
         let req = GraphQLRequest<JSONValue>(
             document: "mutation($input:UpdateFoodInput!){updateFood(input:$input){id}}",
             variables: ["input": input], responseType: JSONValue.self)
-        guard case .success = try? await Amplify.API.mutate(request: req) else { return false }
-        return true
+        return await mutateSucceeded(req)
     }
-
 }

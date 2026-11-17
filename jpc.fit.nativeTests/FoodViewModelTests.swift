@@ -9,7 +9,7 @@ final class FoodViewModelTests: XCTestCase {
     override func setUp() {
         super.setUp()
         mockAPI = MockAPIService()
-        vm = FoodViewModel(api: mockAPI)
+        vm = FoodViewModel(api: mockAPI, healthKit: NoHealthStats())
     }
 
     // MARK: - Computed Properties
@@ -67,11 +67,24 @@ final class FoodViewModelTests: XCTestCase {
 
     // MARK: - Fetch
 
-    func testFetchAllSetsLoadingState() async {
+    func testListStateWalksLoadingEmptyRows() async {
+        // StateMachine "Food list": loading → empty → rows, derived by the VM.
         let today = DayKey.today
-        XCTAssertTrue(vm.isLoading)
+        XCTAssertEqual(vm.listState, .loading)
         await vm.fetchAll(day: today, date: Date())
-        XCTAssertFalse(vm.isLoading)
+        XCTAssertEqual(vm.listState, .empty)
+        let food = Food(id: "1", name: "Toast", calories: 120, day: today)
+        await mockAPI.setFoods([food])
+        await vm.fetchAll(day: today, date: Date())
+        XCTAssertEqual(vm.listState, .rows([food]))
+    }
+
+    func testSilentRefreshNeverShowsTheSpinner() async {
+        let today = DayKey.today
+        await vm.fetchAll(day: today, date: Date())
+        await mockAPI.setFoods([Food(id: "1", name: "Toast", calories: 120, day: today)])
+        await vm.fetchAll(day: today, date: Date(), showLoading: false)
+        XCTAssertEqual(vm.foods.count, 1)
     }
 
     func testFetchAllPopulatesFoods() async {
@@ -158,11 +171,14 @@ final class FoodViewModelTests: XCTestCase {
         await vm.fetchAll(day: today, date: Date())
         XCTAssertTrue(vm.hideProtein)
         XCTAssertTrue(vm.hideSteps)
+        XCTAssertEqual(vm.preferences, .stored(Preferences(id: "p1", hideProtein: true, hideSteps: true)))
     }
 
     func testHideFlagsDefaultFalseWithoutPreferences() async {
         let today = DayKey.today
+        XCTAssertEqual(vm.preferences, .unknown, "nothing is known before the first fetch")
         await vm.fetchAll(day: today, date: Date())
+        XCTAssertEqual(vm.preferences, .missing)
         XCTAssertFalse(vm.hideProtein)
         XCTAssertFalse(vm.hideSteps)
     }
@@ -245,10 +261,6 @@ extension MockAPIService {
 
     func setCache(_ cache: HealthKitCache?) {
         healthKitCache = cache
-    }
-
-    func setQuickAdds(_ adds: [QuickAddItem]) {
-        quickAdds = adds
     }
 
     func getCreatedFoods() -> [(name: String, calories: Int, protein: Int?, day: String)] {

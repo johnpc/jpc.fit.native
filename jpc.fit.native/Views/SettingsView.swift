@@ -1,43 +1,41 @@
 import SwiftUI
-import Amplify
 
 struct SettingsView: View {
-    let user: AuthUser
     @StateObject private var vm = SettingsViewModel()
-    @State private var showCreateQuickAdd = false
-    @State private var newName = ""
-    @State private var newCalories = ""
-    @State private var newProtein = ""
-    @State private var newIcon = "🍽️"
-    @State private var showDeleteAccount = false
     @StateObject private var notifications = NotificationManager.shared
+    /// Which quick-add sheet is up (create / edit) — see `QuickAddSheet`.
+    @State private var sheet: QuickAddSheet?
+    @State private var draft = QuickAddDraft()
+    @State private var showDeleteAccount = false
     @State private var newReminderTime = Date()
-    @State private var editingQuickAdd: QuickAdd?
 
     var body: some View {
         List {
             HeaderSection()
             PhilosophySection()
-            notificationsSection
+            NotificationsSection(notifications: notifications, newReminderTime: $newReminderTime)
             preferencesSection
-            createQuickAddSection
-            quickAddsListSection
+            Section("Create Quick Add") {
+                Button { open(.create) } label: { Label("New Quick Add", systemImage: "plus.circle") }
+            }
+            QuickAddsListSection(quickAdds: vm.quickAdds, hideProtein: vm.hideProtein,
+                                 onEdit: { open(.edit($0)) }, onDelete: vm.deleteQuickAdd)
             accountSection
+            ErrorSection(error: vm.errorMessage)
             Section { Link("Contact Support", destination: URL(string: "mailto:john@johncorser.com")!) }
         }
         .navigationTitle("Settings")
-        .sheet(isPresented: $showCreateQuickAdd) { createQuickAddSheet }
-        .sheet(item: $editingQuickAdd) { qa in editQuickAddSheet(qa) }
+        .sheet(item: $sheet) { sheet in
+            QuickAddFormSheet(title: sheet.title, icon: $draft.icon, name: $draft.name, calories: $draft.calories,
+                              protein: $draft.protein, hideProtein: vm.hideProtein, confirmLabel: sheet.confirmLabel,
+                              confirmDisabled: !draft.isValid, onCancel: close, onConfirm: { confirm(sheet) })
+        }
         .alert("Delete Account?", isPresented: $showDeleteAccount) {
             Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) { vm.deleteAccount() }
         } message: { Text("This will permanently delete your account and all data.") }
         .task { await vm.fetchAll() }
         .refreshable { await vm.fetchAll() }
-    }
-
-    private var notificationsSection: some View {
-        NotificationsSection(notifications: notifications, newReminderTime: $newReminderTime)
     }
 
     private var preferencesSection: some View {
@@ -47,18 +45,6 @@ struct SettingsView: View {
         }
     }
 
-    private var createQuickAddSection: some View {
-        Section("Create Quick Add") {
-            Button { showCreateQuickAdd = true } label: { Label("New Quick Add", systemImage: "plus.circle") }
-        }
-    }
-
-    private var quickAddsListSection: some View {
-        QuickAddsListSection(quickAdds: vm.quickAdds, hideProtein: vm.hideProtein,
-                             iconDisplay: vm.iconDisplay, onEdit: { editingQuickAdd = $0 },
-                             onDelete: vm.deleteQuickAdd)
-    }
-
     private var accountSection: some View {
         Section("Account") {
             Button("Sign Out", role: .destructive) { vm.signOut() }
@@ -66,21 +52,21 @@ struct SettingsView: View {
         }
     }
 
-    private var createQuickAddSheet: some View {
-        QuickAddFormSheet(title: "New Quick Add", icon: $newIcon, name: $newName, calories: $newCalories,
-                          protein: $newProtein, hideProtein: vm.hideProtein, confirmLabel: "Create",
-                          confirmDisabled: newName.trimmingCharacters(in: .whitespaces).isEmpty || Int(newCalories) == nil,
-                          onCancel: { showCreateQuickAdd = false; clearForm() },
-                          onConfirm: { vm.createQuickAdd(name: newName, calories: newCalories, protein: newProtein, icon: newIcon); showCreateQuickAdd = false; clearForm() })
+    private func open(_ next: QuickAddSheet) {
+        draft = next.draft
+        sheet = next
     }
 
-    private func editQuickAddSheet(_ qa: QuickAdd) -> some View {
-        QuickAddFormSheet(title: "Edit Quick Add", icon: $newIcon, name: $newName, calories: $newCalories,
-                          protein: $newProtein, hideProtein: vm.hideProtein, confirmLabel: "Save", confirmDisabled: false,
-                          onCancel: { editingQuickAdd = nil; clearForm() },
-                          onConfirm: { vm.updateQuickAdd(id: qa.id, name: newName, calories: newCalories, protein: newProtein, icon: newIcon); editingQuickAdd = nil; clearForm() })
-            .onAppear { newName = qa.name; newCalories = "\(qa.calories)"; newProtein = qa.protein.map { "\($0)" } ?? ""; newIcon = vm.iconDisplay(qa.icon) }
+    private func close() {
+        sheet = nil
+        draft = QuickAddDraft()
     }
 
-    private func clearForm() { newName = ""; newCalories = ""; newProtein = ""; newIcon = "🍽️" }
+    private func confirm(_ current: QuickAddSheet) {
+        switch current {
+        case .create: vm.createQuickAdd(draft)
+        case .edit(let item): vm.updateQuickAdd(id: item.id, with: draft)
+        }
+        close()
+    }
 }

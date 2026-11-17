@@ -6,7 +6,7 @@ struct StatsBreakdownSection: View {
 
     var body: some View {
         Section {
-            if weekData.allSatisfy({ !$0.tracked && !$0.failed }) && !weekData.isEmpty {
+            if weekData.allSatisfy({ $0.status == .untracked }) && !weekData.isEmpty {
                 Text("No food logged in these 7 days")
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity)
@@ -14,10 +14,11 @@ struct StatsBreakdownSection: View {
             ForEach(weekData, id: \.day) { day in
                 HStack {
                     Text(day.shortDay).frame(width: 50, alignment: .leading)
-                    if day.failed {
+                    switch day.status {
+                    case .failed:
                         Text("couldn't load").font(.caption).foregroundStyle(.secondary)
                         Spacer()
-                    } else {
+                    case .tracked, .untracked:
                         Text("\(day.consumed)").frame(width: 60, alignment: .trailing)
                         Text("\(day.burned)").frame(width: 60, alignment: .trailing)
                         Spacer()

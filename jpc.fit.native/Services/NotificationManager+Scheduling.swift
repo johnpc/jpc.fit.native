@@ -25,7 +25,7 @@ extension NotificationManager {
         if let data = try? JSONEncoder().encode(times) {
             defaults.set(data, forKey: timesKey)
         }
-        scheduleNotifications()
+        Task { await scheduleNotifications() }
     }
 
     func addTime(_ date: Date) {
@@ -39,10 +39,11 @@ extension NotificationManager {
         saveTimes()
     }
 
-    func scheduleNotifications() {
-        let center = UNUserNotificationCenter.current()
-        center.removeAllPendingNotificationRequests()
-
+    /// Replaces every pending reminder with one per configured time. A no-op
+    /// unless reminders are enabled — nothing is ever scheduled behind a
+    /// disabled or denied state.
+    func scheduleNotifications() async {
+        center.removeAllPendingRequests()
         guard isEnabled else { return }
 
         for (i, time) in reminderTimes.enumerated() {
@@ -53,10 +54,10 @@ extension NotificationManager {
 
             let trigger = UNCalendarNotificationTrigger(dateMatching: time, repeats: true)
             let request = UNNotificationRequest(identifier: "reminder-\(i)", content: content, trigger: trigger)
-            center.add(request) { error in
-                if let error {
-                    Log.notifications.error("Failed to schedule notification: \(error)")
-                }
+            do {
+                try await center.add(request)
+            } catch {
+                Log.notifications.error("Failed to schedule notification: \(error)")
             }
         }
     }

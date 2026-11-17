@@ -1,11 +1,9 @@
 import SwiftUI
-import Amplify
 
 struct WeightView: View {
-    let user: AuthUser
     @StateObject private var vm = WeightViewModel()
-    @State private var showWeightAlert = false
-    @State private var showHeightAlert = false
+    /// Which measurement is being entered — see `MeasurementPrompt`.
+    @State private var prompt: MeasurementPrompt?
     @State private var newValue = ""
 
     var body: some View {
@@ -16,43 +14,41 @@ struct WeightView: View {
             referenceSection
         }
         .navigationTitle("Weight")
-        .alert("Enter Weight (lbs)", isPresented: $showWeightAlert) {
-            TextField("Weight", text: $newValue).keyboardType(.numberPad)
+        .alert(prompt?.title ?? "", isPresented: Binding(get: { prompt != nil }, set: { if !$0 { prompt = nil } }),
+               presenting: prompt) { current in
+            TextField(current.fieldLabel, text: $newValue).keyboardType(.numberPad)
             Button("Cancel", role: .cancel) { newValue = "" }
-            Button("Save") { vm.saveWeight(newValue); newValue = "" }
-        }
-        .alert("Enter Height (inches)", isPresented: $showHeightAlert) {
-            TextField("Height", text: $newValue).keyboardType(.numberPad)
-            Button("Cancel", role: .cancel) { newValue = "" }
-            Button("Save") { vm.saveHeight(newValue); newValue = "" }
-        }
+            Button("Save") { vm.save(current, value: newValue); newValue = "" }
+        } message: { _ in EmptyView() }
         .task { await vm.fetchData() }
         .refreshable { await vm.fetchData() }
         .overlay { if vm.isLoading { ProgressView() } }
         .overlay(alignment: .bottom) {
-            if vm.showToast, let msg = vm.toastMessage {
+            if let msg = vm.toast {
                 Text(msg)
                     .font(.callout).padding()
                     .background(.red.opacity(0.9)).foregroundStyle(.white)
                     .cornerRadius(10).padding(.bottom, 40)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
-                    .onAppear { DispatchQueue.main.asyncAfter(deadline: .now() + 4) { withAnimation { vm.showToast = false } } }
             }
         }
-        .animation(.easeInOut, value: vm.showToast)
+        .animation(.easeInOut, value: vm.toast)
     }
 
     private var healthDataSection: some View {
         Section("Health Data") {
-            HStack {
-                Text("Weight"); Spacer(); Text("\(vm.currentWeight) lbs")
-                Button { showWeightAlert = true } label: { Image(systemName: "scalemass") }.buttonStyle(.borderless)
-            }
-            HStack {
-                Text("Height"); Spacer(); Text("\(vm.currentHeight) inches")
-                Button { showHeightAlert = true } label: { Image(systemName: "ruler") }.buttonStyle(.borderless)
-            }
+            measurementRow(.weight, value: "\(vm.currentWeight) lbs")
+            measurementRow(.height, value: "\(vm.currentHeight) inches")
             HStack { Text("BMI"); Spacer(); Text("\(vm.bmi, specifier: "%.1f") (\(vm.bmiLabel))") }
+        }
+    }
+
+    private func measurementRow(_ kind: MeasurementPrompt, value: String) -> some View {
+        HStack {
+            Text(kind.fieldLabel); Spacer(); Text(value)
+            Button { prompt = kind } label: { Image(systemName: kind.icon) }
+                .buttonStyle(.borderless)
+                .accessibilityLabel("Edit \(kind.fieldLabel)")
         }
     }
 

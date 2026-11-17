@@ -1,14 +1,24 @@
 import Foundation
-import Amplify
-import AWSPluginsCore
 
 @MainActor
 class WeightViewModel: ObservableObject {
     @Published var weights: [Weight] = []
     @Published var heights: [Height] = []
     @Published var isLoading = true
-    @Published var toastMessage: String?
-    @Published var showToast = false
+    /// StateMachine: Weight toast
+    /// The error toast is ONE optional: visible iff non-nil (`toastMessage` +
+    /// `showToast` could disagree). Auto-hides after `toastDuration`; a newer
+    /// toast restarts the clock.
+    @Published private(set) var toast: String?
+
+    let api: APIServiceProtocol
+    private let toastDuration: Duration
+    private var toastTask: Task<Void, Never>?
+
+    init(api: APIServiceProtocol = AppServices.api, toastDuration: Duration = .seconds(4)) {
+        self.api = api
+        self.toastDuration = toastDuration
+    }
 
     var currentWeight: Int { weights.first?.currentWeight ?? 180 }
     var currentHeight: Int { heights.first?.currentHeight ?? 70 }
@@ -27,60 +37,62 @@ class WeightViewModel: ObservableObject {
 
     func fetchData() async {
         isLoading = true
-        async let w = fetchWeights()
-        async let h = fetchHeights()
+        async let w = api.fetchWeights()
+        async let h = api.fetchHeights()
         weights = await w
         heights = await h
         isLoading = false
     }
 
-    // Saves are OPTIMISTIC: the row is inserted at tap time and stays — no
-    // post-write refetch (it flipped isLoading and grayed the screen for the
-    // whole round trip, and an immediate re-list can miss the new row anyway
-    // per DynamoDB eventual consistency). On failure: toast + roll back.
-    func saveWeight(_ value: String) {
-        guard let val = Int(value), val > 0 else { return }
+    /// Saves are OPTIMISTIC: the row is inserted at tap time and stays — no
+    /// post-write refetch (it flipped isLoading and grayed the screen for the
+    /// whole round trip, and an immediate re-list can miss the new row anyway
+    /// per DynamoDB eventual consistency). On failure: toast + roll back.
+    /// Returns false when the text isn't a positive whole number.
+    @discardableResult
+    func save(_ prompt: MeasurementPrompt, value: String) -> Bool {
+        guard let val = Int(value), val > 0 else { return false }
+        switch prompt {
+        case .weight: saveWeight(val)
+        case .height: saveHeight(val)
+        }
+        return true
+    }
+
+    private func saveWeight(_ val: Int) {
         let optimistic = Weight(currentWeight: val, createdAt: .now())
         weights.insert(optimistic, at: 0)
         Task {
-            let doc = "mutation CreateWeight($input: CreateWeightInput!) { createWeight(input: $input) { id } }"
-            if let failure = await runCreate(document: doc, input: ["currentWeight": val]) {
-                showError("Weight: \(failure)")
+            if case .failed(let reason) = await api.createWeight(val) {
+                showError("Weight: \(reason)")
                 weights.removeAll { $0.id == optimistic.id }
             }
         }
     }
 
-    func saveHeight(_ value: String) {
-        guard let val = Int(value), val > 0 else { return }
+    private func saveHeight(_ val: Int) {
         let optimistic = Height(currentHeight: val, createdAt: .now())
         heights.insert(optimistic, at: 0)
         Task {
-            let doc = "mutation CreateHeight($input: CreateHeightInput!) { createHeight(input: $input) { id } }"
-            if let failure = await runCreate(document: doc, input: ["currentHeight": val]) {
-                showError("Height: \(failure)")
+            if case .failed(let reason) = await api.createHeight(val) {
+                showError("Height: \(reason)")
                 heights.removeAll { $0.id == optimistic.id }
             }
         }
     }
 
-    /// Runs a create mutation; returns a failure description or nil on success.
-    private func runCreate(document: String, input: [String: Any]) async -> String? {
-        let request = GraphQLRequest<JSONValue>(
-            document: document, variables: ["input": input], responseType: JSONValue.self,
-            authMode: AWSAuthorizationType.amazonCognitoUserPools)
-        do {
-            if case .failure(let error) = try await Amplify.API.mutate(request: request) {
-                return error.errorDescription
-            }
-            return nil
-        } catch {
-            return error.localizedDescription
+    func showError(_ message: String) {
+        toast = message
+        toastTask?.cancel()
+        toastTask = Task { [toastDuration] in
+            try? await Task.sleep(for: toastDuration)
+            guard !Task.isCancelled else { return }
+            toast = nil
         }
     }
 
-    func showError(_ message: String) {
-        toastMessage = message
-        showToast = true
+    /// Lets a test await the auto-hide instead of sleeping.
+    func awaitToastDismissal() async {
+        await toastTask?.value
     }
 }

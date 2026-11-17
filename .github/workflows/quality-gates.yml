@@ -41,6 +41,8 @@ jobs:
         run: python3 scripts/banned_types_check.py
       - name: Halstead difficulty ≤ 20
         run: python3 scripts/halstead_check.py
+      - name: State-machine catalog
+        run: python3 scripts/check_state_machines.py
 
   build:
     name: Build
@@ -138,14 +140,15 @@ jobs:
     runs-on: [self-hosted, mac-mini]
     needs: build
     timeout-minutes: 40
-    env:
-      TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
-      TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
     steps:
       - uses: actions/checkout@v5
       - name: Verify generated acceptance tests match .feature files
         run: python3 scripts/generate_acceptance_tests.py --check
-      - name: Run acceptance tests (retry failed, then full suite)
+      # The scenarios drive the app in DEMO mode: the in-process fake backend
+      # (DemoAPIService) — no credentials, no network, deterministic seed.
+      # One run, no retry loop: a test that needs a retry is a bug we fix
+      # (README "There is no such thing as a flaky test").
+      - name: Run acceptance tests
         run: |
           XCTESTRUN=$(ls "$HOME/$CI_CACHE/products/${{ github.run_id }}"/*.xctestrun | head -1)
           RESULT_PATH=/tmp/AcceptanceResults.xcresult
@@ -155,41 +158,13 @@ jobs:
             -destination "$DESTINATION" \
             -only-testing:"jpc.fit.nativeUITests/AcceptanceTests" \
             -resultBundlePath "$RESULT_PATH" \
-            -quiet && exit 0
-
-          echo "⚠️ Some tests failed, retrying only failed tests..."
-          FAILED=$(xcrun xcresulttool get test-results tests --path "$RESULT_PATH" 2>/dev/null \
-            | python3 -c "
-          import json, sys
-          data = json.load(sys.stdin)
-          for node in data.get('testNodes', []):
-            for child in node.get('children', []):
-              for test in child.get('children', []):
-                if test.get('result') == 'Failed':
-                  print(f\"jpc.fit.nativeUITests/{child['name']}/{test['name']}\")
-          ")
-
-          if [ -n "$FAILED" ]; then
-            RETRY_ARGS=""
-            for t in $FAILED; do
-              echo "  Retrying: $t"
-              RETRY_ARGS="$RETRY_ARGS -only-testing:$t"
-            done
-            sleep 5
-            xcodebuild test-without-building \
-              -xctestrun "$XCTESTRUN" \
-              -destination "$DESTINATION" \
-              $RETRY_ARGS \
-              -quiet && exit 0
-          fi
-
-          echo "⚠️ Targeted retry failed, retrying full suite..."
-          sleep 5
-          xcodebuild test-without-building \
-            -xctestrun "$XCTESTRUN" \
-            -destination "$DESTINATION" \
-            -only-testing:"jpc.fit.nativeUITests/AcceptanceTests" \
             -quiet
+      - name: Upload acceptance results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: acceptance-results
+          path: /tmp/AcceptanceResults.xcresult
 
   deploy:
     name: Deploy to App Store Connect

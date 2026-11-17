@@ -6,4 +6,5 @@ Feature: Quotes Tab
   Scenario: View quotes
     Given I am signed in
     When I tap the Quotes tab
-    Then I should see motivational content
+    Then I should see the "Randomize Quote" button
+    And I should see "fit.jpc.io"

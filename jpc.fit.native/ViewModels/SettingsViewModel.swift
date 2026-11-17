@@ -1,57 +1,72 @@
 import Foundation
-import Amplify
 
 @MainActor
 class SettingsViewModel: ObservableObject {
-    @Published var quickAdds: [QuickAdd] = []
-    @Published var preferences: Preferences?
+    @Published var quickAdds: [QuickAddItem] = []
+    @Published private(set) var preferences: PreferencesRecord = .unknown
+    @Published var errorMessage: String?
 
-    var hideProtein: Bool { preferences?.hideProtein ?? false }
-    var hideSteps: Bool { preferences?.hideSteps ?? false }
+    let api: APIServiceProtocol
+    let auth: AuthServiceProtocol
+
+    init(api: APIServiceProtocol = AppServices.api, auth: AuthServiceProtocol = AppServices.auth) {
+        self.api = api
+        self.auth = auth
+    }
+
+    var hideProtein: Bool { preferences.hideProtein }
+    var hideSteps: Bool { preferences.hideSteps }
 
     func fetchAll() async {
-        async let q = fetchQuickAdds()
-        async let p = fetchPreferences()
+        async let q = api.fetchQuickAdds()
+        async let p = api.fetchPreferences()
         quickAdds = await q
         preferences = await p
     }
 
     func updatePreference(hideProtein: Bool? = nil, hideSteps: Bool? = nil) {
-        Task {
-            let hp = hideProtein ?? self.hideProtein
-            let hs = hideSteps ?? self.hideSteps
-            if let existing = preferences {
-                let req = GraphQLRequest<JSONValue>(
-                    document: "mutation($input:UpdatePreferencesInput!){updatePreferences(input:$input){id}}",
-                    variables: ["input": ["id": existing.id, "hideProtein": hp, "hideSteps": hs]],
-                    responseType: JSONValue.self)
-                _ = try? await Amplify.API.mutate(request: req)
-                preferences = Preferences(id: existing.id, hideProtein: hp, hideSteps: hs)
-            } else {
-                let req = GraphQLRequest<JSONValue>(
-                    document: "mutation($input:CreatePreferencesInput!){createPreferences(input:$input){id}}",
-                    variables: ["input": ["hideProtein": hp, "hideSteps": hs]],
-                    responseType: JSONValue.self)
-                if case .success(let json) = try? await Amplify.API.mutate(request: req),
-                   let id = json["createPreferences"]?["id"]?.stringValue {
-                    preferences = Preferences(id: id, hideProtein: hp, hideSteps: hs)
-                }
-            }
+        let hp = hideProtein ?? self.hideProtein
+        let hs = hideSteps ?? self.hideSteps
+        Task { await savePreferences(hideProtein: hp, hideSteps: hs) }
+    }
+
+    /// The ONE writer of `preferences`. A failed earlier fetch is retried
+    /// here first, so a toggle never creates a duplicate row on the backend.
+    func savePreferences(hideProtein: Bool, hideSteps: Bool) async {
+        if preferences == .unknown { preferences = await api.fetchPreferences() }
+        switch preferences {
+        case .stored(let existing):
+            await update(existing, hideProtein: hideProtein, hideSteps: hideSteps)
+        case .missing:
+            await create(hideProtein: hideProtein, hideSteps: hideSteps)
+        case .unknown:
+            errorMessage = "Couldn't load your preferences — pull to refresh and try again."
         }
     }
 
-    func deleteAccount() {
-        Task {
-            try? await Amplify.Auth.deleteUser()
-            _ = await Amplify.Auth.signOut()
+    private func update(_ existing: Preferences, hideProtein: Bool, hideSteps: Bool) async {
+        preferences = .stored(Preferences(id: existing.id, hideProtein: hideProtein, hideSteps: hideSteps))
+        if await !api.updatePreferences(id: existing.id, hideProtein: hideProtein, hideSteps: hideSteps) {
+            preferences = .stored(existing)
+            errorMessage = Self.saveFailed
         }
+    }
+
+    private func create(hideProtein: Bool, hideSteps: Bool) async {
+        if let id = await api.createPreferences(hideProtein: hideProtein, hideSteps: hideSteps) {
+            preferences = .stored(Preferences(id: id, hideProtein: hideProtein, hideSteps: hideSteps))
+        } else {
+            errorMessage = Self.saveFailed
+        }
+    }
+
+    private static let saveFailed = "Couldn't save your preferences — check your connection and try again."
+
+    func deleteAccount() {
+        Task { await auth.deleteUser() }
     }
 
     func signOut() {
-        Task { _ = await Amplify.Auth.signOut() }
-    }
-
-    func iconDisplay(_ icon: String) -> String {
-        icon.unicodeScalars.first?.properties.isEmoji == true ? icon : "🍽️"
+        Task { await auth.signOut() }
     }
 }

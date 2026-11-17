@@ -5,14 +5,17 @@ import XCTest
 /// (\w+) tab`).
 final class GherkinWorld {
     let app: XCUIApplication
+    /// Demo (default) or live — decides credentials and the HealthKit prompt.
+    let backend: E2EBackend
     var captures: [String] = []
-    /// Sign-in credentials, set by the runner from env / `.env`.
-    var email = ""
-    var password = ""
 
-    init(app: XCUIApplication) {
+    init(app: XCUIApplication, backend: E2EBackend) {
         self.app = app
+        self.backend = backend
     }
+
+    var email: String { backend.email }
+    var password: String { backend.password }
 
     /// First positional capture group, or fails the test with a clear message.
     func capture(_ index: Int = 0, _ file: StaticString = #file, _ line: UInt = #line) -> String {

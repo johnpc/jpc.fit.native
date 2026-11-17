@@ -11,8 +11,14 @@ actor MockAPIService: APIServiceProtocol {
     var createdCaches: [(active: Double, base: Double, steps: Double, day: String)] = []
     var updatedCaches: [(id: String, active: Double, base: Double, steps: Double)] = []
 
+    var preferencesRecord: PreferencesRecord = .missing
+    var createdPreferences = 0
+    var updatedPreferences: [(id: String, hideProtein: Bool, hideSteps: Bool)] = []
+    var weights: [Weight] = []
+    var heights: [Height] = []
+
     var fetchFoodsCalls = 0
-    /// When true, all food mutations fail — exercises the rollback paths.
+    /// When true, all mutations fail — exercises the rollback paths.
     var failWrites = false
 
     func setFailWrites(_ fail: Bool) { failWrites = fail }
@@ -31,14 +37,6 @@ actor MockAPIService: APIServiceProtocol {
     func fetchQuickAdds() async -> [QuickAddItem] {
         quickAdds
     }
-
-    var preferences: Preferences?
-
-    func fetchPreferences() async -> Preferences? {
-        preferences
-    }
-
-    func setPreferences(_ p: Preferences?) { preferences = p }
 
     /// Per-day calorie lists for the Stats reads. A day key mapped to nil (or
     /// listed in `failingDays`) simulates a failed request; an absent key is

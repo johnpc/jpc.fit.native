@@ -9,7 +9,7 @@ final class StatsViewModelWeekTests: XCTestCase {
     override func setUp() {
         super.setUp()
         mockAPI = MockAPIService()
-        vm = StatsViewModel(api: mockAPI)
+        vm = StatsViewModel(api: mockAPI, healthKit: NoHealthStats())
     }
 
     private func dayKey(daysAgo: Int) -> String {
@@ -31,10 +31,12 @@ final class StatsViewModelWeekTests: XCTestCase {
         await mockAPI.setFailingDays([dayKey(daysAgo: 2)])
         await mockAPI.setDayCalories([dayKey(daysAgo: 1): [1000]])
         await vm.fetchWeek()
-        let failedDay = vm.weekData.first { $0.failed }
+        let failedDay = vm.weekData.first { $0.status == .failed }
         XCTAssertNotNil(failedDay)
-        XCTAssertFalse(failedDay!.tracked)
+        XCTAssertFalse(failedDay?.tracked ?? true)
         XCTAssertEqual(vm.weekData.filter(\.failed).count, 1)
+        XCTAssertEqual(vm.weekData.filter { $0.status == .tracked }.count, 1)
+        XCTAssertEqual(vm.weekData.filter { $0.status == .untracked }.count, 5)
     }
 
     func testWeekNetExcludesFailedDays() async {
@@ -62,6 +64,12 @@ final class StatsViewModelWeekTests: XCTestCase {
         XCTAssertTrue(vm.isViewingCurrentWeek)
         vm.weekEndDate = Calendar.current.date(byAdding: .day, value: -7, to: Date())!
         XCTAssertFalse(vm.isViewingCurrentWeek)
+    }
+
+    func testStatusOfCaloriesIsExhaustive() {
+        XCTAssertEqual(StatsViewModel.status(of: nil), .failed)
+        XCTAssertEqual(StatsViewModel.status(of: []), .untracked)
+        XCTAssertEqual(StatsViewModel.status(of: [1]), .tracked)
     }
 
     func testGoToTodayRestoresCurrentWindow() async {

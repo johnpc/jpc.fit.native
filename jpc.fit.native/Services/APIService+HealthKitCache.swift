@@ -9,11 +9,7 @@ extension APIService {
             document: "mutation($input:CreateHealthKitCacheInput!){createHealthKitCache(input:$input){id}}",
             variables: ["input": ["activeCalories": activeCalories, "baseCalories": baseCalories, "steps": steps, "day": day]],
             responseType: JSONValue.self)
-        if case .success(let data) = try? await Amplify.API.mutate(request: req),
-           let id = data.value(at: "createHealthKitCache.id"), case .string(let idStr) = id {
-            return idStr
-        }
-        return nil
+        return await createdId(req, at: "createHealthKitCache.id")
     }
 
     func updateHealthKitCache(id: String, activeCalories: Double, baseCalories: Double, steps: Double) async {

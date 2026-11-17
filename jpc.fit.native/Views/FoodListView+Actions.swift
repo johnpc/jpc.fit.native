@@ -1,19 +1,36 @@
 import SwiftUI
 
-/// Form-driven food actions for `FoodListView` — split by concern to keep the
-/// view file within the line budget. All writes are optimistic via the VM.
+/// Sheet + food actions for `FoodListView` — split by concern to keep the
+/// view file within the line budget. All writes are optimistic via the VM;
+/// validation and naming rules live in `FoodDraft`.
 extension FoodListView {
+    func open(_ next: FoodSheet) {
+        draft = next.draft
+        sheet = next
+    }
+
+    func close() {
+        sheet = nil
+        draft = FoodDraft()
+    }
+
+    func confirm(_ current: FoodSheet) {
+        switch current {
+        case .add: addCustomFood()
+        case .edit(let food): updateFood(food)
+        }
+        close()
+    }
+
     func addQuickFood(_ qa: QuickAddItem) {
         Task { await vm.addFood(name: "\(qa.icon) \(qa.name)", calories: qa.calories, protein: qa.protein, day: dayString) }
     }
 
-    func addCustomFood() {
-        if let cal = Int(newFoodCalories), cal > 0 {
-            let name = "🍽️ \(newFoodName.isEmpty ? "Food" : newFoodName)"
-            let protein = Int(newFoodProtein)
-            Task { await vm.addFood(name: name, calories: cal, protein: protein, day: dayString) }
-        }
-        clearForm()
+    private func addCustomFood() {
+        guard let cal = draft.calorieValue else { return }
+        let name = draft.customFoodName
+        let protein = draft.proteinValue
+        Task { await vm.addFood(name: name, calories: cal, protein: protein, day: dayString) }
     }
 
     func deleteFood(at offsets: IndexSet) {
@@ -23,13 +40,10 @@ extension FoodListView {
         Task { for food in doomed { await vm.deleteFood(food, day: dayString) } }
     }
 
-    func updateFood(_ food: Food) {
-        guard let cal = Int(newFoodCalories), cal > 0 else { clearForm(); return }
-        let protein = Int(newFoodProtein)
-        let name = newFoodName.isEmpty ? nil : newFoodName
+    private func updateFood(_ food: Food) {
+        guard let cal = draft.calorieValue else { return }
+        let protein = draft.proteinValue
+        let name = draft.editedName
         Task { await vm.updateFood(id: food.id, name: name, calories: cal, protein: protein, day: dayString) }
-        clearForm()
     }
-
-    func clearForm() { newFoodName = ""; newFoodCalories = ""; newFoodProtein = "" }
 }

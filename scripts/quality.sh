@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Full local quality gate for jpc.fit.native — the same checks CI enforces, in
 # one command: source-line limit, Gherkin sync, static checks (dead code,
-# duplication, banned types, Halstead ≤20), unit tests + coverage ≥80%,
-# CRAP ≤30, and a clean build.
+# duplication, banned types, Halstead ≤20, state-machine catalog), unit tests +
+# coverage ≥80%, CRAP ≤30, and a clean build. The Gherkin acceptance suite runs
+# in CI (and by hand: see README "Acceptance tests") against the demo backend.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
@@ -16,11 +17,12 @@ bash scripts/check_line_limit.sh
 echo "▶ [2/6] Acceptance tests generated from .feature files are in sync"
 python3 scripts/generate_acceptance_tests.py --check
 
-echo "▶ [3/6] Static checks: dead code, duplication, banned types, Halstead"
+echo "▶ [3/6] Static checks: dead code, duplication, banned types, Halstead, state machines"
 python3 scripts/dead_code_check.py
 python3 scripts/duplication_check.py
 python3 scripts/banned_types_check.py
 python3 scripts/halstead_check.py
+python3 scripts/check_state_machines.py
 
 echo "▶ [4/6] Unit tests + coverage"
 rm -rf "$RESULT"

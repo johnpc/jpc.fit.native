@@ -9,26 +9,51 @@ struct StatsStreakSection: View {
     var body: some View {
         Section {
             VStack(spacing: 8) {
-                if let label = vm.streakDaysLabel {
-                    Text("Your streak is \(label) days").font(.headline)
-                    Text(vm.streakLbsText)
-                        .font(.subheadline)
-                        .foregroundStyle(vm.streakNet > 0 ? .red : .green)
-                } else {
-                    HStack(spacing: 8) { ProgressView(); Text("Calculating streak...") }
-                }
+                streakHeader
                 HStack(spacing: 16) {
                     ForEach(vm.recentDays.suffix(4), id: \.day) { day in
                         VStack {
-                            Text(day.tracked ? "🔥" : (day.failed ? "⚠️" : "◻️")).font(.title)
+                            Text(flame(for: day.status)).font(.title)
                             Text(day.shortDay).font(.caption)
                         }
                         .accessibilityElement(children: .ignore)
-                        .accessibilityLabel("\(day.shortDay): \(day.failed ? "couldn't load" : day.tracked ? "tracked" : "not tracked")")
+                        .accessibilityLabel("\(day.shortDay): \(caption(for: day.status))")
                     }
                 }
             }
             .frame(maxWidth: .infinity).padding(.vertical, 8)
+        }
+    }
+
+    @ViewBuilder
+    private var streakHeader: some View {
+        switch vm.streak {
+        case .computing:
+            HStack(spacing: 8) { ProgressView(); Text("Calculating streak...") }
+        case .known:
+            Text("Your streak is \(vm.streakDaysLabel ?? "0") days").font(.headline)
+            Text(vm.streak.lbsText)
+                .font(.subheadline)
+                .foregroundStyle(vm.streak.net > 0 ? .red : .green)
+        case .unavailable:
+            Text("Couldn't load your streak").font(.headline)
+            Text("Pull down to try again.").font(.subheadline).foregroundStyle(.secondary)
+        }
+    }
+
+    private func flame(for status: DayStats.Status) -> String {
+        switch status {
+        case .tracked: return "🔥"
+        case .untracked: return "◻️"
+        case .failed: return "⚠️"
+        }
+    }
+
+    private func caption(for status: DayStats.Status) -> String {
+        switch status {
+        case .tracked: return "tracked"
+        case .untracked: return "not tracked"
+        case .failed: return "couldn't load"
         }
     }
 }

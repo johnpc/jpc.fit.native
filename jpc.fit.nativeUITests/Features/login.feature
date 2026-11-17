@@ -8,3 +8,9 @@ Feature: User Login
     When I sign in with valid credentials
     Then I should see the Calories tab
     And the tab bar should show all 5 tabs
+
+  @demo-data
+  Scenario: Empty credentials are rejected with an explanation
+    Given the app is launched
+    When I tap Sign In without entering credentials
+    Then I should see "Enter an email and a password to try the demo."
