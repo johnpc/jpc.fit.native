@@ -193,24 +193,29 @@ jobs:
           # signing can't see or write a keychain. Sign manually with the CI
           # keychain's Apple Distribution identity (see ~/ci-signing/ios_manual_signing.py).
           security unlock-keychain -p "$CI_KEYCHAIN_PASSWORD" "$HOME/Library/Keychains/ci-signing.keychain-db"
-          python3 ~/ci-signing/ios_manual_signing.py apply "jpc.fit.native.xcodeproj" --export-options /tmp/ExportOptions.plist
+          # Per-job $RUNNER_TEMP, not /tmp or ~/Desktop: other apps' deploys share this Mac and would overwrite fixed paths mid-upload.
+          python3 ~/ci-signing/ios_manual_signing.py apply "jpc.fit.native.xcodeproj" --export-options "$RUNNER_TEMP/ExportOptions.plist"
 
       - name: Archive and upload (auto-bump version on conflict)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # Per-job $RUNNER_TEMP, not /tmp or ~/Desktop: other apps' deploys share this Mac and would overwrite fixed paths mid-upload.
+          ARCHIVE="$RUNNER_TEMP/jpc.fit.native.xcarchive"
+          EXPORT_OPTIONS="$RUNNER_TEMP/ExportOptions.plist"
+          EXPORT_DIR="$RUNNER_TEMP/export"
           upload() {
             xcodebuild archive \
               -scheme "$SCHEME" \
               -destination "generic/platform=iOS" \
-              -archivePath ~/Desktop/jpc.fit.native.xcarchive \
+              -archivePath "$ARCHIVE" \
               -quiet
 
 
             xcodebuild -exportArchive \
-              -archivePath ~/Desktop/jpc.fit.native.xcarchive \
-              -exportOptionsPlist /tmp/ExportOptions.plist \
-              -exportPath ~/Desktop/export \
+              -archivePath "$ARCHIVE" \
+              -exportOptionsPlist "$EXPORT_OPTIONS" \
+              -exportPath "$EXPORT_DIR" \
               -allowProvisioningUpdates \
               -authenticationKeyPath ~/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8 \
               -authenticationKeyID ${{ secrets.ASC_KEY_ID }} \
@@ -231,8 +236,8 @@ jobs:
 
             # Upload the bumped build FIRST, so a rejected push can never
             # leave the store without a build.
-            python3 ~/ci-signing/ios_manual_signing.py apply "jpc.fit.native.xcodeproj" --export-options /tmp/ExportOptions.plist
-            rm -rf ~/Desktop/jpc.fit.native.xcarchive
+            python3 ~/ci-signing/ios_manual_signing.py apply "jpc.fit.native.xcodeproj" --export-options "$EXPORT_OPTIONS"
+            rm -rf "$ARCHIVE"
             OUTPUT=$(upload)
             echo "$OUTPUT"
 
