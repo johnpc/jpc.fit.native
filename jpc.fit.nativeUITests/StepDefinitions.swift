@@ -60,16 +60,26 @@ enum StepDefinitions {
     /// up — each probe is a bounded `waitForExistence`, never a sleep.
     @discardableResult
     static func reveal(_ element: XCUIElement, in app: XCUIApplication) -> Bool {
-        if element.waitForExistence(timeout: medium) && element.isHittable { return true }
+        if element.waitForExistence(timeout: medium) && isVisible(element, in: app) { return true }
         for _ in 0..<3 {
             app.swipeUp()
-            if element.waitForExistence(timeout: 1) && element.isHittable { return true }
+            if element.waitForExistence(timeout: 1) && isVisible(element, in: app) { return true }
         }
         for _ in 0..<6 {
             app.swipeDown()
-            if element.waitForExistence(timeout: 1) && element.isHittable { return true }
+            if element.waitForExistence(timeout: 1) && isVisible(element, in: app) { return true }
         }
         return element.exists
+    }
+
+    /// On screen, judged from the element's frame. NOT `isHittable`: for a row
+    /// that is mid-insert or scrolled under the tab bar, `isHittable` itself
+    /// fails the test ("Activation point invalid and no suggested hit points",
+    /// seen in CI on PR #21) instead of returning false.
+    static func isVisible(_ element: XCUIElement, in app: XCUIApplication) -> Bool {
+        let frame = element.frame
+        let window = app.windows.firstMatch.frame
+        return !frame.isEmpty && window.contains(CGPoint(x: frame.midX, y: frame.midY))
     }
 
     /// Reveal the element (scrolling if the list has it off screen), then tap.
