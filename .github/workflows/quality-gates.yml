@@ -168,99 +168,20 @@ jobs:
           path: /tmp/AcceptanceResults.xcresult
 
   deploy:
-    name: Deploy to App Store Connect
-    # Self-hosted Mac Mini. Safe here without the fork-PR gate: this job
-    # only runs on push-to-main (never pull_request) via its own condition.
-    runs-on: [self-hosted, mac-mini]
-    timeout-minutes: 60
+    # Shared deploy (johnpc/ci-workflows): archive with the CI keychain's manual
+    # signing (app, widget and watch targets), upload, and on a version conflict
+    # bump the minor version and open a ci/bump-version-* PR that auto-merges.
+    # secrets: inherit passes DEPLOY_PAT, so that PR is authored by johnpc and
+    # its required checks run on their own (a GITHUB_TOKEN PR starts no CI).
     needs: [unit-tests, crap-analysis, acceptance-tests]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    steps:
-      - uses: actions/checkout@v5
-      - name: Write App Store Connect API key
-        run: |
-          mkdir -p ~/private_keys
-          echo "${{ secrets.ASC_KEY_CONTENT }}" > ~/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
-      - name: Increment build number
-        run: |
-          BUILD_NUM=$(date +%Y%m%d%H%M)
-          agvtool new-version -all $BUILD_NUM
-      - name: Prepare CI signing (manual, CI keychain)
-        env:
-          CI_KEYCHAIN_PASSWORD: ${{ secrets.CI_KEYCHAIN_PASSWORD }}
-        run: |
-          # Runner jobs run in the system launchd context, where Xcode's automatic
-          # signing can't see or write a keychain. Sign manually with the CI
-          # keychain's Apple Distribution identity (see ~/ci-signing/ios_manual_signing.py).
-          security unlock-keychain -p "$CI_KEYCHAIN_PASSWORD" "$HOME/Library/Keychains/ci-signing.keychain-db"
-          # Per-job $RUNNER_TEMP, not /tmp or ~/Desktop: other apps' deploys share this Mac and would overwrite fixed paths mid-upload.
-          python3 ~/ci-signing/ios_manual_signing.py apply "jpc.fit.native.xcodeproj" --export-options "$RUNNER_TEMP/ExportOptions.plist"
-
-      - name: Archive and upload (auto-bump version on conflict)
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          # Per-job $RUNNER_TEMP, not /tmp or ~/Desktop: other apps' deploys share this Mac and would overwrite fixed paths mid-upload.
-          ARCHIVE="$RUNNER_TEMP/jpc.fit.native.xcarchive"
-          EXPORT_OPTIONS="$RUNNER_TEMP/ExportOptions.plist"
-          EXPORT_DIR="$RUNNER_TEMP/export"
-          upload() {
-            xcodebuild archive \
-              -scheme "$SCHEME" \
-              -destination "generic/platform=iOS" \
-              -archivePath "$ARCHIVE" \
-              -quiet
-
-
-            xcodebuild -exportArchive \
-              -archivePath "$ARCHIVE" \
-              -exportOptionsPlist "$EXPORT_OPTIONS" \
-              -exportPath "$EXPORT_DIR" \
-              -allowProvisioningUpdates \
-              -authenticationKeyPath ~/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8 \
-              -authenticationKeyID ${{ secrets.ASC_KEY_ID }} \
-              -authenticationKeyIssuerID ${{ secrets.ASC_ISSUER_ID }} 2>&1
-          }
-
-          OUTPUT=$(upload) && echo "$OUTPUT" && exit 0
-
-          if echo "$OUTPUT" | grep -qi "version.*already exists\|already been uploaded\|redundant binary\|train.*closed\|higher version"; then
-            echo "⚠️ Version conflict detected, bumping minor version..."
-            python3 ~/ci-signing/ios_manual_signing.py revert "jpc.fit.native.xcodeproj"
-            CURRENT=$(grep 'MARKETING_VERSION' jpc.fit.native.xcodeproj/project.pbxproj | head -1 | sed 's/.*= *\(.*\);/\1/')
-            MAJOR=$(echo "$CURRENT" | cut -d. -f1)
-            MINOR=$(echo "$CURRENT" | cut -d. -f2)
-            NEW_VERSION="${MAJOR}.$((MINOR + 1))"
-            sed -i '' "s/MARKETING_VERSION = ${CURRENT}/MARKETING_VERSION = ${NEW_VERSION}/g" jpc.fit.native.xcodeproj/project.pbxproj
-            echo "Bumped $CURRENT → $NEW_VERSION"
-
-            # Upload the bumped build FIRST, so a rejected push can never
-            # leave the store without a build.
-            python3 ~/ci-signing/ios_manual_signing.py apply "jpc.fit.native.xcodeproj" --export-options "$EXPORT_OPTIONS"
-            rm -rf "$ARCHIVE"
-            OUTPUT=$(upload)
-            echo "$OUTPUT"
-
-            # Persist the bump. main is protected (required checks), so the
-            # bot cannot push to it directly: open a PR and let it auto-merge
-            # once the gates pass. No [skip ci] — the checks must run.
-            python3 ~/ci-signing/ios_manual_signing.py revert "jpc.fit.native.xcodeproj"
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            BRANCH="ci/bump-version-${NEW_VERSION}"
-            git checkout -b "$BRANCH"
-            git add -A
-            git commit -m "chore(release): bump version to $NEW_VERSION"
-            git push -u origin "$BRANCH"
-            gh pr create --base main --head "$BRANCH" \
-              --title "chore(release): bump version to $NEW_VERSION" \
-              --body "Automated by the App Store Connect deploy job: $CURRENT already exists in App Store Connect, so build $BUILD_NUM was uploaded as $NEW_VERSION. This PR records that bump."
-            gh pr merge "$BRANCH" --auto --squash --delete-branch
-          else
-            echo "$OUTPUT"
-            exit 1
-          fi
-
-      - name: Revert CI signing
-        if: always()
-        run: python3 ~/ci-signing/ios_manual_signing.py revert "jpc.fit.native.xcodeproj"
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    uses: johnpc/ci-workflows/.github/workflows/ios-deploy-native.yml@v1
+    secrets: inherit
+    with:
+      project: jpc.fit.native.xcodeproj
+      scheme: jpc.fit.native
+      bump: minor
